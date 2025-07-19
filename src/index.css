@@ -25,7 +25,7 @@ All colors MUST be HSL.
     --secondary-foreground: 210 40% 98%;
 
     --muted: 210 15% 15%;
-    --muted-foreground: 210 15% 60%;
+    --muted-foreground: 210 15% 75%;
 
     --accent: 217 91% 60%;
     --accent-foreground: 210 20% 6%;
@@ -33,7 +33,7 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 210 15% 15%;
+    --border: 210 15% 25%;
     --input: 210 15% 12%;
     --ring: 217 91% 60%;
 
@@ -46,7 +46,7 @@ All colors MUST be HSL.
     --sidebar-primary-foreground: 210 20% 6%;
     --sidebar-accent: 210 15% 12%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 210 15% 10%;
+    --sidebar-border: 210 15% 20%;
     --sidebar-ring: 217 91% 60%;
 
     /* Custom Analytics Colors */
