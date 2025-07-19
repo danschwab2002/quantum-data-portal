@@ -20,7 +20,7 @@ export function CreateDashboardModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
-  const [selectedCollection, setSelectedCollection] = useState<string>("")
+  const [selectedCollection, setSelectedCollection] = useState<string>("none")
   const [collections, setCollections] = useState<Collection[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const { toast } = useToast()
@@ -89,7 +89,7 @@ export function CreateDashboardModal() {
       }
 
       // Si hay una colección seleccionada, agregar el dashboard a la colección
-      if (selectedCollection && data) {
+      if (selectedCollection && selectedCollection !== "none" && data) {
         const { error: collectionError } = await supabase
           .from('collection_dashboards')
           .insert({
@@ -121,7 +121,7 @@ export function CreateDashboardModal() {
       setIsOpen(false)
       setName("")
       setDescription("")
-      setSelectedCollection("")
+      setSelectedCollection("none")
       
       // Navigate to the new dashboard
       navigate(`/dashboard/${data.id}`)
@@ -183,7 +183,7 @@ export function CreateDashboardModal() {
                 <SelectValue placeholder="Selecciona una colección" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Ninguna colección</SelectItem>
+                <SelectItem value="none">Ninguna colección</SelectItem>
                 {collections.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     <div className="flex items-center gap-2">

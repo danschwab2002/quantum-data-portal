@@ -35,7 +35,7 @@ WHERE event_type = 'connection_message_sent';`)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [questionName, setQuestionName] = useState("")
   const [visualizationType, setVisualizationType] = useState("")
-  const [selectedCollection, setSelectedCollection] = useState<string>("")
+  const [selectedCollection, setSelectedCollection] = useState<string>("none")
   const [collections, setCollections] = useState<Collection[]>([])
   const [isSaving, setIsSaving] = useState(false)
 
@@ -196,7 +196,7 @@ WHERE event_type = 'connection_message_sent';`)
       }
 
       // Si hay una colección seleccionada, agregar la pregunta a la colección
-      if (selectedCollection && questionData) {
+      if (selectedCollection && selectedCollection !== "none" && questionData) {
         const { error: collectionError } = await supabase
           .from('collection_questions')
           .insert({
@@ -229,7 +229,7 @@ WHERE event_type = 'connection_message_sent';`)
       setIsModalOpen(false)
       setQuestionName("")
       setVisualizationType("")
-      setSelectedCollection("")
+      setSelectedCollection("none")
       
     } catch (err: any) {
       console.error('Unexpected error saving question:', err)
@@ -320,7 +320,7 @@ WHERE event_type = 'connection_message_sent';`)
                               <SelectValue placeholder="Selecciona una colección" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">Ninguna colección</SelectItem>
+                              <SelectItem value="none">Ninguna colección</SelectItem>
                               {collections.map((collection) => (
                                 <SelectItem key={collection.id} value={collection.id}>
                                   <div className="flex items-center gap-2">
