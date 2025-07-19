@@ -16,6 +16,8 @@ interface Question {
 
 interface AddWidgetModalProps {
   dashboardId: string
+  sectionId?: string
+  onClose?: () => void
   onWidgetAdded: () => void
 }
 
@@ -34,7 +36,7 @@ const getVisualizationIcon = (type: string) => {
   }
 }
 
-export function AddWidgetModal({ dashboardId, onWidgetAdded }: AddWidgetModalProps) {
+export function AddWidgetModal({ dashboardId, sectionId, onClose, onWidgetAdded }: AddWidgetModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -69,11 +71,28 @@ export function AddWidgetModal({ dashboardId, onWidgetAdded }: AddWidgetModalPro
   const handleAddWidget = async (questionId: string) => {
     setIsAdding(questionId)
     try {
+      // If sectionId is provided, use it. Otherwise, find the first section for this dashboard
+      let targetSectionId = sectionId
+      
+      if (!targetSectionId) {
+        const { data: sections } = await supabase
+          .from('dashboard_sections')
+          .select('id')
+          .eq('dashboard_id', dashboardId)
+          .order('display_order')
+          .limit(1)
+        
+        if (sections && sections.length > 0) {
+          targetSectionId = sections[0].id
+        }
+      }
+
       const { error } = await supabase
         .from('dashboard_widgets')
         .insert({
           dashboard_id: dashboardId,
-          question_id: questionId
+          question_id: questionId,
+          section_id: targetSectionId
         })
 
       if (error) {
@@ -86,6 +105,7 @@ export function AddWidgetModal({ dashboardId, onWidgetAdded }: AddWidgetModalPro
       })
 
       setIsOpen(false)
+      if (onClose) onClose()
       onWidgetAdded()
     } catch (error) {
       console.error('Error adding widget:', error)
@@ -105,14 +125,20 @@ export function AddWidgetModal({ dashboardId, onWidgetAdded }: AddWidgetModalPro
     }
   }, [isOpen])
 
+  // If onClose is provided, this is controlled externally
+  const isControlled = !!onClose
+  const dialogOpen = isControlled ? true : isOpen
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Widget
-        </Button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={isControlled ? onClose : setIsOpen}>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Widget
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="bg-card border-border max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-foreground">Agregar Widget</DialogTitle>

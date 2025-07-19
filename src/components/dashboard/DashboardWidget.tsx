@@ -6,18 +6,36 @@ import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, 
 import { supabase } from "@/integrations/supabase/client"
 
 interface DashboardWidgetProps {
-  question: {
+  question?: {
     id: string
     name: string
     query: string
     visualization_type: string
   }
+  widget?: {
+    id: string
+    dashboard_id: string
+    section_id: string
+    question_id: string
+    grid_position: any
+    question: {
+      id: string
+      name: string
+      query: string
+      visualization_type: string
+      created_at: string
+    }
+  }
+  onUpdate?: () => void
 }
 
-export function DashboardWidget({ question }: DashboardWidgetProps) {
+export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetProps) {
   const [data, setData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Use question from widget if available, otherwise use direct question prop
+  const questionData = widget?.question || question
 
   useEffect(() => {
     const executeQuery = async () => {
@@ -26,7 +44,7 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
       
       try {
         const { data: result, error } = await supabase.rpc('execute_sql_query', {
-          query_text: question.query
+          query_text: questionData.query
         })
 
         if (error) {
@@ -50,8 +68,10 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
       }
     }
 
-    executeQuery()
-  }, [question.query])
+    if (questionData?.query) {
+      executeQuery()
+    }
+  }, [questionData?.query])
 
   const renderVisualization = () => {
     if (isLoading) {
@@ -78,7 +98,7 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
       )
     }
 
-    const vizType = question.visualization_type?.toLowerCase?.() || '';
+    const vizType = questionData?.visualization_type?.toLowerCase?.() || '';
     
     switch (vizType) {
       case 'numero':
@@ -233,7 +253,9 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
   }
 
   const getIcon = () => {
-    switch (question.visualization_type.toLowerCase()) {
+    if (!questionData?.visualization_type) return <BarChart3 className="w-4 h-4" />
+    
+    switch (questionData.visualization_type.toLowerCase()) {
       case 'numero':
         return <Hash className="w-4 h-4" />
       case 'tabla':
@@ -252,7 +274,7 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-foreground text-base flex items-center gap-2">
           {getIcon()}
-          {question.name}
+          {questionData?.name || 'Sin título'}
         </CardTitle>
       </CardHeader>
       <CardContent>

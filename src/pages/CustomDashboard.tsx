@@ -2,8 +2,12 @@ import { useState, useEffect } from "react"
 import { useParams, Navigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { AddWidgetModal } from "@/components/dashboard/AddWidgetModal"
-import { DashboardWidget } from "@/components/dashboard/DashboardWidget"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Plus } from "lucide-react"
+import { DashboardSection } from "@/components/dashboard/DashboardSection"
 
 interface Dashboard {
   id: string
@@ -13,9 +17,18 @@ interface Dashboard {
   created_at: string
 }
 
+interface DashboardSectionType {
+  id: string
+  dashboard_id: string
+  name: string
+  display_order: number
+  created_at: string
+}
+
 interface DashboardWidget {
   id: string
   dashboard_id: string
+  section_id: string
   question_id: string
   grid_position: any
   question: {
@@ -30,9 +43,13 @@ interface DashboardWidget {
 export default function CustomDashboard() {
   const { dashboardId } = useParams<{ dashboardId: string }>()
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
+  const [sections, setSections] = useState<DashboardSectionType[]>([])
   const [widgets, setWidgets] = useState<DashboardWidget[]>([])
+  const [activeSection, setActiveSection] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAddSection, setShowAddSection] = useState(false)
+  const [newSectionName, setNewSectionName] = useState("")
   const { toast } = useToast()
 
   const fetchDashboard = async () => {
@@ -53,6 +70,36 @@ export default function CustomDashboard() {
     } catch (err) {
       console.error('Error fetching dashboard:', err)
       setError('Dashboard no encontrado')
+    }
+  }
+
+  const fetchSections = async () => {
+    if (!dashboardId) return
+
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_sections')
+        .select('*')
+        .eq('dashboard_id', dashboardId)
+        .order('display_order', { ascending: true })
+
+      if (error) {
+        throw error
+      }
+
+      setSections(data || [])
+      
+      // Set active section to first section if not set
+      if (data && data.length > 0 && !activeSection) {
+        setActiveSection(data[0].id)
+      }
+    } catch (err) {
+      console.error('Error fetching sections:', err)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las secciones",
+        variant: "destructive",
+      })
     }
   }
 
@@ -84,14 +131,51 @@ export default function CustomDashboard() {
     }
   }
 
-  const handleWidgetAdded = () => {
+  const handleSectionUpdate = () => {
+    fetchSections()
+  }
+
+  const handleWidgetUpdate = () => {
     fetchWidgets()
+  }
+
+  const handleAddSection = async () => {
+    if (!newSectionName.trim() || !dashboardId) return
+
+    try {
+      const maxOrder = Math.max(...sections.map(s => s.display_order), -1)
+      
+      const { error } = await supabase
+        .from('dashboard_sections')
+        .insert({
+          dashboard_id: dashboardId,
+          name: newSectionName.trim(),
+          display_order: maxOrder + 1
+        })
+
+      if (error) throw error
+
+      toast({
+        title: "Éxito",
+        description: "Sección creada correctamente"
+      })
+
+      setNewSectionName("")
+      setShowAddSection(false)
+      fetchSections()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      })
+    }
   }
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
-      await Promise.all([fetchDashboard(), fetchWidgets()])
+      await Promise.all([fetchDashboard(), fetchSections(), fetchWidgets()])
       setIsLoading(false)
     }
 
@@ -125,6 +209,10 @@ export default function CustomDashboard() {
     )
   }
 
+  const getWidgetsForSection = (sectionId: string) => {
+    return widgets.filter(widget => widget.section_id === sectionId)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -135,39 +223,82 @@ export default function CustomDashboard() {
             <p className="text-muted-foreground mt-1">{dashboard.description}</p>
           )}
         </div>
-        <AddWidgetModal 
-          dashboardId={dashboardId} 
-          onWidgetAdded={handleWidgetAdded}
-        />
+        <Dialog open={showAddSection} onOpenChange={setShowAddSection}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Sección
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Crear Nueva Sección</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Nombre de la sección"
+                value={newSectionName}
+                onChange={(e) => setNewSectionName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddSection()
+                }}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowAddSection(false)
+                    setNewSectionName("")
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddSection} disabled={!newSectionName.trim()}>
+                  Crear Sección
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Widgets Grid */}
-      {widgets.length === 0 ? (
+      {/* Sections Tabs */}
+      {sections.length === 0 ? (
         <div className="flex items-center justify-center min-h-96 border-2 border-dashed border-border rounded-lg">
           <div className="text-center">
             <div className="text-muted-foreground text-lg mb-2">
-              Tu dashboard está vacío
+              Este dashboard no tiene secciones
             </div>
             <div className="text-muted-foreground text-sm mb-4">
-              Agrega tu primer widget para comenzar a visualizar datos
+              Crea tu primera sección para comenzar a organizar widgets
             </div>
-            <AddWidgetModal 
-              dashboardId={dashboardId} 
-              onWidgetAdded={handleWidgetAdded}
-            />
+            <Button onClick={() => setShowAddSection(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Primera Sección
+            </Button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {widgets.map((widget) => (
-            <div 
-              key={widget.id} 
-              className="col-span-1"
-            >
-              <DashboardWidget question={widget.question} />
-            </div>
+        <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${sections.length}, 1fr)` }}>
+            {sections.map((section) => (
+              <TabsTrigger key={section.id} value={section.id} className="flex-1">
+                {section.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {sections.map((section) => (
+            <TabsContent key={section.id} value={section.id} className="mt-6">
+              <DashboardSection
+                section={section}
+                widgets={getWidgetsForSection(section.id)}
+                onSectionUpdate={handleSectionUpdate}
+                onWidgetUpdate={handleWidgetUpdate}
+              />
+            </TabsContent>
           ))}
-        </div>
+        </Tabs>
       )}
     </div>
   )

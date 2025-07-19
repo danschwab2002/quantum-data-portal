@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      dashboard_sections: {
+        Row: {
+          created_at: string
+          dashboard_id: string
+          display_order: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_id: string
+          display_order?: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_id?: string
+          display_order?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       dashboard_widgets: {
         Row: {
           created_at: string
@@ -21,6 +45,7 @@ export type Database = {
           grid_position: Json | null
           id: string
           question_id: string
+          section_id: string
         }
         Insert: {
           created_at?: string
@@ -28,6 +53,7 @@ export type Database = {
           grid_position?: Json | null
           id?: string
           question_id: string
+          section_id: string
         }
         Update: {
           created_at?: string
@@ -35,6 +61,7 @@ export type Database = {
           grid_position?: Json | null
           id?: string
           question_id?: string
+          section_id?: string
         }
         Relationships: [
           {
@@ -49,6 +76,13 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_widgets_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "dashboard_sections"
             referencedColumns: ["id"]
           },
         ]
