@@ -4,11 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
+import { AuthProvider } from "./components/auth/AuthProvider";
 import Dashboard from "./pages/Dashboard";
 import CustomDashboard from "./pages/CustomDashboard";
 import SqlEditor from "./pages/SqlEditor";
 import Collections from "./pages/Collections";
 import DatabaseConnection from "./pages/DatabaseConnection";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,18 +21,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
+        <AuthProvider>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard/:dashboardId" element={<CustomDashboard />} />
-            <Route path="/sql-editor" element={<SqlEditor />} />
-            <Route path="/collections" element={<Collections />} />
-            <Route path="/database" element={<DatabaseConnection />} />
-            <Route path="/dashboards" element={<Dashboard />} />
-            <Route path="/settings" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/*" element={
+              <AppLayout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard/:dashboardId" element={<CustomDashboard />} />
+                  <Route path="/sql-editor" element={<SqlEditor />} />
+                  <Route path="/collections" element={<Collections />} />
+                  <Route path="/database" element={<DatabaseConnection />} />
+                  <Route path="/dashboards" element={<Dashboard />} />
+                  <Route path="/settings" element={<Dashboard />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AppLayout>
+            } />
           </Routes>
-        </AppLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

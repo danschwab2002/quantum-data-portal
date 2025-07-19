@@ -1,13 +1,15 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { Button } from "@/components/ui/button"
-import { Search, Bell, User } from "lucide-react"
+import { Search, Bell, User, LogOut } from "lucide-react"
+import { useAuth } from "@/components/auth/AuthProvider"
 
 interface AppLayoutProps {
   children: React.ReactNode
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const { user, signOut } = useAuth()
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -36,6 +38,17 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 <User className="w-4 h-4" />
               </Button>
+              {user && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={signOut}
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </header>
 
