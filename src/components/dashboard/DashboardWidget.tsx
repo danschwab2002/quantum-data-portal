@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel, LabelList, Legend } from 'recharts'
-import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X, PieChart as PieChartIcon, Filter } from "lucide-react"
+import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X, PieChart as PieChartIcon, Filter, Percent } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -165,6 +164,8 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
     switch (vizType) {
       case 'numero':
         return renderNumberWidget()
+      case 'porcentaje':
+        return renderPercentageWidget()
       case 'tabla':
         return renderTableWidget()
       case 'grafico-barras':
@@ -198,6 +199,34 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         </div>
         <div className="text-3xl font-bold text-foreground">
           {typeof numericValue === 'number' ? numericValue.toLocaleString() : String(value)}
+        </div>
+        <div className="text-sm text-muted-foreground">Este mes</div>
+      </div>
+    )
+  }
+
+  const renderPercentageWidget = () => {
+    const firstRow = data[0]
+    const value = firstRow ? Object.values(firstRow)[0] : 0
+    const numericValue = Number(value) || 0
+    
+    // Convert to percentage format - if value is between 0-1, multiply by 100
+    const percentageValue = numericValue <= 1 ? numericValue * 100 : numericValue
+    
+    const changePercentage = Math.random() * 20 - 5 // Mock percentage change
+    const isPositive = changePercentage >= 0
+
+    return (
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-between">
+          <Percent className="w-5 h-5 text-primary" />
+          <div className={`flex items-center gap-1 text-sm ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+            {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            {Math.abs(changePercentage).toFixed(1)}%
+          </div>
+        </div>
+        <div className="text-3xl font-bold text-foreground">
+          {percentageValue.toFixed(1)}%
         </div>
         <div className="text-sm text-muted-foreground">Este mes</div>
       </div>
@@ -483,6 +512,8 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
     switch (questionData.visualization_type.toLowerCase()) {
       case 'numero':
         return <Hash className="w-4 h-4" />
+      case 'porcentaje':
+        return <Percent className="w-4 h-4" />
       case 'tabla':
         return <TableIcon className="w-4 h-4" />
       case 'grafico-barras':

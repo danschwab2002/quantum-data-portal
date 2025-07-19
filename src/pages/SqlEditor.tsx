@@ -307,6 +307,7 @@ WHERE event_type = 'connection_message_sent';`)
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="numero">Número</SelectItem>
+                              <SelectItem value="porcentaje">Porcentaje</SelectItem>
                               <SelectItem value="tabla">Tabla</SelectItem>
                               <SelectItem value="grafico-barras">Gráfico de Barras</SelectItem>
                               <SelectItem value="grafico-lineas">Gráfico de Líneas</SelectItem>
