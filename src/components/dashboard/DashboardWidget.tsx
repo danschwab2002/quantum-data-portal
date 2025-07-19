@@ -392,11 +392,12 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
 
     return (
       <ResponsiveContainer width="100%" height={200}>
-        <FunnelChart layout="vertical">
+        <FunnelChart width={400} height={200}>
           <Funnel
             dataKey="value"
             data={chartData}
             isAnimationActive
+            orientation="horizontal"
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={funnelColors[index % funnelColors.length]} />
@@ -420,7 +421,10 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
               borderRadius: '6px',
-              color: 'hsl(var(--foreground))'
+              color: 'white'
+            }}
+            labelStyle={{
+              color: 'white'
             }}
             formatter={(value, name) => [
               `${value}`, 
