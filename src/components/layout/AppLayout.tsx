@@ -16,7 +16,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 ml-4">
           {/* Header */}
           <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
             <div className="flex items-center gap-4">
