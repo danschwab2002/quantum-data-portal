@@ -8,6 +8,7 @@ import { AuthProvider } from "./components/auth/AuthProvider";
 import Dashboard from "./pages/Dashboard";
 import CustomDashboard from "./pages/CustomDashboard";
 import SqlEditor from "./pages/SqlEditor";
+import SavedQueries from "./pages/SavedQueries";
 import Collections from "./pages/Collections";
 import DatabaseConnection from "./pages/DatabaseConnection";
 import Auth from "./pages/Auth";
@@ -30,6 +31,7 @@ const App = () => (
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/dashboard/:dashboardId" element={<CustomDashboard />} />
                   <Route path="/sql-editor" element={<SqlEditor />} />
+                  <Route path="/saved-queries" element={<SavedQueries />} />
                   <Route path="/collections" element={<Collections />} />
                   <Route path="/database" element={<DatabaseConnection />} />
                   <Route path="/dashboards" element={<Dashboard />} />

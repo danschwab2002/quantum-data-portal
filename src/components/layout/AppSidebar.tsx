@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { BarChart3, Database, FolderOpen, Plus, Settings, FileQuestion, LayoutDashboard, Home, ChevronRight, ChevronDown } from "lucide-react";
+import { BarChart3, Database, FolderOpen, Plus, Settings, FileQuestion, LayoutDashboard, Home, ChevronRight, ChevronDown, Save } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -18,6 +18,10 @@ const navigationItems = [{
   title: "Dashboards",
   url: "/dashboards",
   icon: LayoutDashboard
+}, {
+  title: "Saved Queries",
+  url: "/saved-queries",
+  icon: Save
 }, {
   title: "Collections",
   url: "/collections",
