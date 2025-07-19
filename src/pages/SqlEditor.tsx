@@ -39,15 +39,49 @@ ORDER BY total_events DESC;`)
     setQueryError(null)
 
     try {
-      // For now, we'll simulate query execution but use real data from Supabase
-      // In a production environment, you'd want to create a secure RPC function
-      // to execute arbitrary SQL queries
+      // Parse and execute basic queries manually since Supabase doesn't allow arbitrary SQL
+      await executeBasicQuery()
+    } finally {
+      setIsExecuting(false)
+    }
+  }
+
+  const executeBasicQuery = async () => {
+    try {
+      const lowerQuery = query.toLowerCase().trim()
       
-      // Sample query execution based on the query content
+      // Handle COUNT queries
+      if (lowerQuery.includes('count(') && lowerQuery.includes('setting_analytics')) {
+        let supabaseQuery = supabase.from('setting_analytics').select('*', { count: 'exact', head: true })
+        
+        // Parse WHERE conditions
+        if (lowerQuery.includes('where') && lowerQuery.includes('event_type')) {
+          const eventTypeMatch = query.match(/event_type\s*=\s*['"](.*?)['"]/i)
+          if (eventTypeMatch) {
+            supabaseQuery = supabaseQuery.eq('event_type', eventTypeMatch[1])
+          }
+        }
+        
+        const { count, error } = await supabaseQuery
+        
+        if (error) {
+          setQueryError(error.message)
+          setQueryResult(null)
+        } else {
+          setQueryResult({
+            columns: ['count'],
+            rows: [[count || 0]]
+          })
+          setQueryError(null)
+        }
+        return
+      }
+      
+      // Handle regular SELECT queries
       let data: any[] = []
       let error: any = null
 
-      if (query.toLowerCase().includes('setting_analytics')) {
+      if (lowerQuery.includes('setting_analytics')) {
         const { data: analyticsData, error: analyticsError } = await supabase
           .from('setting_analytics')
           .select('event_type, account, created_at')
@@ -55,7 +89,7 @@ ORDER BY total_events DESC;`)
         
         data = analyticsData || []
         error = analyticsError
-      } else if (query.toLowerCase().includes('scraped_data_juanm')) {
+      } else if (lowerQuery.includes('scraped_data_juanm')) {
         const { data: scrapedData, error: scrapedError } = await supabase
           .from('scraped_data_juanm')
           .select('profile, post_type, likes_count, comments_count, engagement_rate')
@@ -63,7 +97,7 @@ ORDER BY total_events DESC;`)
         
         data = scrapedData || []
         error = scrapedError
-      } else if (query.toLowerCase().includes('n8n_chat_histories')) {
+      } else if (lowerQuery.includes('n8n_chat_histories')) {
         const { data: chatData, error: chatError } = await supabase
           .from('n8n_chat_histories')
           .select('id, session_id, message')
@@ -99,8 +133,6 @@ ORDER BY total_events DESC;`)
     } catch (err: any) {
       setQueryError(err.message || 'Failed to execute query')
       setQueryResult(null)
-    } finally {
-      setIsExecuting(false)
     }
   }
 
