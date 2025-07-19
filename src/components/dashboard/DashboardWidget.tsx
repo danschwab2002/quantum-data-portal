@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
@@ -53,10 +54,6 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
   }, [question.query])
 
   const renderVisualization = () => {
-    // Debug log para ver qué tipo de visualización se está recibiendo
-    console.log('Question visualization_type:', question.visualization_type)
-    console.log('Question visualization_type (lowercase):', question.visualization_type?.toLowerCase())
-    
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-32">
@@ -82,23 +79,17 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
     }
 
     const vizType = question.visualization_type?.toLowerCase?.() || '';
-    console.log('Switch case matching against:', vizType)
     
     switch (vizType) {
-      case 'número':
-        console.log('Rendering number widget')
+      case 'numero':
         return renderNumberWidget()
       case 'tabla':
-        console.log('Rendering table widget')
         return renderTableWidget()
-      case 'gráfico de barras':
-        console.log('Rendering bar chart')
+      case 'grafico-barras':
         return renderBarChart()
-      case 'gráfico de líneas':
-        console.log('Rendering line chart')
+      case 'grafico-lineas':
         return renderLineChart()
       default:
-        console.log('Rendering default table widget for type:', vizType)
         return renderTableWidget()
     }
   }
@@ -243,13 +234,13 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
 
   const getIcon = () => {
     switch (question.visualization_type.toLowerCase()) {
-      case 'número':
+      case 'numero':
         return <Hash className="w-4 h-4" />
       case 'tabla':
         return <TableIcon className="w-4 h-4" />
-      case 'gráfico de barras':
+      case 'grafico-barras':
         return <BarChart3 className="w-4 h-4" />
-      case 'gráfico de líneas':
+      case 'grafico-lineas':
         return <LineChartIcon className="w-4 h-4" />
       default:
         return <BarChart3 className="w-4 h-4" />
