@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, FolderOpen, FileText, LayoutDashboard, Plus, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, FolderOpen, FileText, LayoutDashboard, Plus, MoreHorizontal, Edit, Trash2, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AddExistingQuestionModal } from "@/components/collections/AddExistingQuestionModal";
+import { AddExistingDashboardModal } from "@/components/collections/AddExistingDashboardModal";
 
 interface Collection {
   id: string;
@@ -250,10 +252,30 @@ const CollectionDetail = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Question
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Nueva Pregunta
+              </DropdownMenuItem>
+              <AddExistingQuestionModal 
+                collectionId={collectionId!} 
+                onQuestionAdded={fetchCollectionData}
+              >
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Agregar Pregunta Existente
+                </DropdownMenuItem>
+              </AddExistingQuestionModal>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -299,13 +321,30 @@ const CollectionDetail = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Questions</h2>
-            <Button 
-              size="sm" 
-              onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Question
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Question
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Nueva Pregunta
+                </DropdownMenuItem>
+                <AddExistingQuestionModal 
+                  collectionId={collectionId!} 
+                  onQuestionAdded={fetchCollectionData}
+                >
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Agregar Pregunta Existente
+                  </DropdownMenuItem>
+                </AddExistingQuestionModal>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {questions.length === 0 ? (
@@ -313,13 +352,30 @@ const CollectionDetail = () => {
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <FileText className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground text-center">No questions in this collection yet</p>
-                <Button 
-                  className="mt-3" 
-                  size="sm"
-                  onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}
-                >
-                  Add First Question
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="mt-3" size="sm">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add First Question
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    <DropdownMenuItem onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear Nueva Pregunta
+                    </DropdownMenuItem>
+                    <AddExistingQuestionModal 
+                      collectionId={collectionId!} 
+                      onQuestionAdded={fetchCollectionData}
+                    >
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Agregar Pregunta Existente
+                      </DropdownMenuItem>
+                    </AddExistingQuestionModal>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardContent>
             </Card>
           ) : (
@@ -384,10 +440,30 @@ const CollectionDetail = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Dashboards</h2>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              Add Dashboard
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Dashboard
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/dashboard`)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Nuevo Dashboard
+                </DropdownMenuItem>
+                <AddExistingDashboardModal 
+                  collectionId={collectionId!} 
+                  onDashboardAdded={fetchCollectionData}
+                >
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Agregar Dashboard Existente
+                  </DropdownMenuItem>
+                </AddExistingDashboardModal>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {dashboards.length === 0 ? (
@@ -395,9 +471,30 @@ const CollectionDetail = () => {
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <LayoutDashboard className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground text-center">No dashboards in this collection yet</p>
-                <Button className="mt-3" size="sm">
-                  Add First Dashboard
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="mt-3" size="sm">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add First Dashboard
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    <DropdownMenuItem onClick={() => navigate(`/dashboard`)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear Nuevo Dashboard
+                    </DropdownMenuItem>
+                    <AddExistingDashboardModal 
+                      collectionId={collectionId!} 
+                      onDashboardAdded={fetchCollectionData}
+                    >
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <LayoutDashboard className="h-4 w-4 mr-2" />
+                        Agregar Dashboard Existente
+                      </DropdownMenuItem>
+                    </AddExistingDashboardModal>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardContent>
             </Card>
           ) : (
