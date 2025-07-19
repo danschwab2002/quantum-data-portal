@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel, LabelList } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel, LabelList, Legend } from 'recharts'
 import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X, PieChart as PieChartIcon, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -327,42 +327,56 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
       }
     })
 
-    // Colores para el gráfico circular
-    const colors = [
-      'hsl(var(--primary))',
-      'hsl(var(--secondary))',
-      'hsl(var(--accent))',
-      'hsl(var(--muted))',
-      'hsl(220, 70%, 60%)',
-      'hsl(280, 70%, 60%)',
-      'hsl(340, 70%, 60%)',
-      'hsl(40, 70%, 60%)'
+    // Paleta de colores atractivos para el gráfico circular
+    const pieColors = [
+      'hsl(217, 91%, 60%)', // Azul vibrante
+      'hsl(142, 76%, 36%)', // Verde esmeralda
+      'hsl(45, 93%, 47%)',  // Amarillo dorado
+      'hsl(271, 81%, 56%)', // Púrpura
+      'hsl(346, 87%, 43%)', // Rojo carmesí
+      'hsl(24, 94%, 50%)',  // Naranja vibrante
+      'hsl(195, 85%, 41%)', // Cian
+      'hsl(291, 64%, 42%)'  // Magenta
     ]
 
     return (
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={250}>
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
             cy="50%"
-            outerRadius={70}
-            fill="hsl(var(--primary))"
+            innerRadius={40}
+            outerRadius={80}
+            paddingAngle={2}
             dataKey="value"
-            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-            labelLine={false}
           >
             {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
             ))}
           </Pie>
           <Tooltip 
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
+              backgroundColor: 'hsl(var(--popover))',
               border: '1px solid hsl(var(--border))',
-              borderRadius: '6px'
+              borderRadius: '6px',
+              color: 'white'
             }}
-            formatter={(value) => [`${value}`, 'Valor']}
+            labelStyle={{
+              color: 'white'
+            }}
+            itemStyle={{
+              color: 'white'
+            }}
+            formatter={(value, name) => [`${value}`, name]}
+          />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+            wrapperStyle={{
+              color: 'hsl(var(--foreground))',
+              fontSize: '12px'
+            }}
           />
         </PieChart>
       </ResponsiveContainer>
