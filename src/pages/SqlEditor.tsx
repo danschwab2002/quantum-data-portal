@@ -10,8 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Play, Save, Database, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 const SqlEditor = () => {
+  const { toast } = useToast()
+  
   const [query, setQuery] = useState(`-- Sample query from your analytics data
 SELECT 
   COUNT(*)
@@ -24,6 +27,7 @@ WHERE event_type = 'connection_message_sent';`)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [questionName, setQuestionName] = useState("")
   const [visualizationType, setVisualizationType] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
 
   const executeQuery = async () => {
     setIsExecuting(true)
@@ -93,6 +97,77 @@ WHERE event_type = 'connection_message_sent';`)
     }
   }
 
+  const handleSaveQuestion = async () => {
+    // Validación: verificar que los campos requeridos no estén vacíos
+    if (!questionName.trim()) {
+      toast({
+        title: "Error de validación",
+        description: "El nombre de la pregunta es requerido",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!visualizationType) {
+      toast({
+        title: "Error de validación", 
+        description: "Debe seleccionar un tipo de visualización",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!query.trim()) {
+      toast({
+        title: "Error de validación",
+        description: "La consulta SQL no puede estar vacía",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      // Insertar la pregunta en la base de datos
+      const { error } = await supabase
+        .from('questions')
+        .insert({
+          name: questionName.trim(),
+          query: query.trim(),
+          visualization_type: visualizationType
+        })
+
+      if (error) {
+        console.error('Error saving question:', error)
+        toast({
+          title: "Error al guardar",
+          description: error.message,
+          variant: "destructive"
+        })
+      } else {
+        // Éxito: cerrar modal y mostrar notificación
+        setIsModalOpen(false)
+        setQuestionName("")
+        setVisualizationType("")
+        
+        toast({
+          title: "Pregunta guardada con éxito",
+          description: `"${questionName}" se ha guardado correctamente`,
+        })
+      }
+    } catch (err: any) {
+      console.error('Unexpected error saving question:', err)
+      toast({
+        title: "Error inesperado",
+        description: "Ocurrió un error al guardar la pregunta. Inténtalo de nuevo.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -158,14 +233,10 @@ WHERE event_type = 'connection_message_sent';`)
                             Cancelar
                           </Button>
                           <Button 
-                            onClick={() => {
-                              // TODO: Implementar lógica de guardado
-                              console.log("Guardar:", { questionName, visualizationType, query })
-                              setIsModalOpen(false)
-                            }}
-                            disabled={!questionName || !visualizationType}
+                            onClick={handleSaveQuestion}
+                            disabled={!questionName || !visualizationType || isSaving}
                           >
-                            Guardar
+                            {isSaving ? "Guardando..." : "Guardar"}
                           </Button>
                         </div>
                       </div>

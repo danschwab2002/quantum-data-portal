@@ -32,6 +32,30 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          query: string
+          visualization_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          query: string
+          visualization_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          query?: string
+          visualization_type?: string
+        }
+        Relationships: []
+      }
       scraped_data_juanm: {
         Row: {
           analyze_post: string | null
