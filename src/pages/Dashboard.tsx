@@ -42,7 +42,7 @@ export default function Dashboard() {
       console.error('Error fetching dashboards:', error)
       toast({
         title: "Error",
-        description: "No se pudieron cargar los dashboards",
+        description: "Failed to load dashboards",
         variant: "destructive",
       })
     } finally {
@@ -75,14 +75,14 @@ export default function Dashboard() {
       ))
 
       toast({
-        title: "Éxito",
-        description: "Dashboard actualizado correctamente",
+        title: "Success",
+        description: "Dashboard updated successfully",
       })
     } catch (error) {
       console.error('Error updating dashboard:', error)
       toast({
         title: "Error",
-        description: "No se pudo actualizar el dashboard",
+        description: "Failed to update dashboard",
         variant: "destructive",
       })
     } finally {
@@ -109,14 +109,14 @@ export default function Dashboard() {
       setDashboards(prev => prev.filter(d => d.id !== dashboardId))
 
       toast({
-        title: "Éxito",
-        description: "Dashboard eliminado correctamente",
+        title: "Success",
+        description: "Dashboard deleted successfully",
       })
     } catch (error) {
       console.error('Error deleting dashboard:', error)
       toast({
         title: "Error",
-        description: "No se pudo eliminar el dashboard",
+        description: "Failed to delete dashboard",
         variant: "destructive",
       })
     }
@@ -133,7 +133,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="text-muted-foreground">Cargando dashboards...</div>
+        <div className="text-muted-foreground">Loading dashboards...</div>
       </div>
     )
   }
@@ -144,7 +144,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboards</h1>
           <p className="text-muted-foreground mt-1">
-            Crea y gestiona tus dashboards personalizados
+            Create and manage your custom dashboards
           </p>
         </div>
         <CreateDashboardModal />
@@ -155,10 +155,10 @@ export default function Dashboard() {
           <div className="text-center max-w-md">
             <LayoutDashboard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              No tienes dashboards
+              You have no dashboards
             </h3>
             <p className="text-muted-foreground mb-6">
-              Crea tu primer dashboard personalizado para comenzar a visualizar tus datos.
+              Create your first custom dashboard to start visualizing your data.
             </p>
             <CreateDashboardModal />
           </div>
@@ -227,18 +227,18 @@ export default function Dashboard() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar dashboard?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete dashboard?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción no se puede deshacer. El dashboard "{dashboard.name}" será eliminado permanentemente.
+                              This action cannot be undone. Dashboard "{dashboard.name}" will be permanently deleted.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(dashboard.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              Eliminar
+                              Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -255,11 +255,11 @@ export default function Dashboard() {
               <CardContent>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="w-4 h-4" />
-                  <span>Creado el {formatDate(dashboard.created_at)}</span>
+                  <span>Created on {formatDate(dashboard.created_at)}</span>
                 </div>
                 <div className="mt-4">
                   <Button size="sm" className="w-full">
-                    Abrir Dashboard
+                    Open Dashboard
                   </Button>
                 </div>
               </CardContent>
