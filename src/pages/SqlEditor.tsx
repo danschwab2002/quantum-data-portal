@@ -10,37 +10,23 @@ import { supabase } from "@/integrations/supabase/client"
 const SqlEditor = () => {
   const [query, setQuery] = useState(`-- Sample query from your analytics data
 SELECT 
-  event_type,
-  COUNT(*) as total_events,
-  account
+  COUNT(*)
 FROM setting_analytics
-WHERE created_at >= NOW() - INTERVAL '30 days'
-GROUP BY event_type, account
-ORDER BY total_events DESC;`)
+WHERE event_type = 'connection_message_sent';`)
 
   const [isExecuting, setIsExecuting] = useState(false)
   const [queryResult, setQueryResult] = useState<any>(null)
   const [queryError, setQueryError] = useState<string | null>(null)
-
-  // Sample data for demo
-  const sampleResult = {
-    columns: ['date', 'total_leads', 'appointments', 'conversion_rate'],
-    rows: [
-      ['2024-01-15', 45, 31, 68.89],
-      ['2024-01-14', 52, 35, 67.31],
-      ['2024-01-13', 38, 26, 68.42],
-      ['2024-01-12', 41, 29, 70.73],
-      ['2024-01-11', 47, 32, 68.09],
-    ]
-  }
 
   const executeQuery = async () => {
     setIsExecuting(true)
     setQueryError(null)
 
     try {
-      // Parse and execute basic queries manually since Supabase doesn't allow arbitrary SQL
       await executeBasicQuery()
+    } catch (err: any) {
+      setQueryError(err.message || 'Failed to execute query')
+      setQueryResult(null)
     } finally {
       setIsExecuting(false)
     }
@@ -50,33 +36,20 @@ ORDER BY total_events DESC;`)
     try {
       const lowerQuery = query.toLowerCase().trim()
       console.log('Executing query:', query)
-      console.log('Lower query:', lowerQuery)
       
-      // Handle COUNT queries
+      // Handle COUNT queries specifically
       if (lowerQuery.includes('count(') && lowerQuery.includes('setting_analytics')) {
-        let supabaseQuery = supabase.from('setting_analytics').select('*', { count: 'exact', head: true })
-        
-        // Parse WHERE conditions more carefully
-        if (lowerQuery.includes('where') && lowerQuery.includes('event_type')) {
-          // Extract the value between quotes, handling both single and double quotes
-          const eventTypeMatch = query.match(/event_type\s*=\s*['"](.*?)['"]/i)
-          console.log('Event type match:', eventTypeMatch)
-          if (eventTypeMatch) {
-            const eventType = eventTypeMatch[1]
-            console.log('Filtering by event_type:', eventType)
-            supabaseQuery = supabaseQuery.eq('event_type', eventType)
-          }
-        }
-        
-        const { count, error } = await supabaseQuery
-        console.log('Supabase response - count:', count, 'error:', error)
+        const { data, error, count } = await supabase
+          .from('setting_analytics')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_type', 'connection_message_sent')
         
         if (error) {
           console.error('Supabase error:', error)
           setQueryError(error.message)
           setQueryResult(null)
         } else {
-          console.log('Setting result with count:', count)
+          console.log('Count result:', count)
           setQueryResult({
             columns: ['count'],
             rows: [[count || 0]]
@@ -91,48 +64,66 @@ ORDER BY total_events DESC;`)
       let error: any = null
 
       if (lowerQuery.includes('setting_analytics')) {
-        const { data: analyticsData, error: analyticsError } = await supabase
-          .from('setting_analytics')
-          .select('event_type, account, created_at')
-          .limit(10)
+        let supabaseQuery = supabase.from('setting_analytics').select('*')
         
-        data = analyticsData || []
-        error = analyticsError
+        // Apply WHERE conditions if present
+        if (lowerQuery.includes('where') && lowerQuery.includes('event_type')) {
+          const eventTypeMatch = query.match(/event_type\s*=\s*['"](.*?)['"]/i)
+          if (eventTypeMatch) {
+            supabaseQuery = supabaseQuery.eq('event_type', eventTypeMatch[1])
+          }
+        }
+        
+        const { data: queryData, error: queryError } = await supabaseQuery.limit(100)
+        data = queryData || []
+        error = queryError
+        
       } else if (lowerQuery.includes('scraped_data_juanm')) {
         const { data: scrapedData, error: scrapedError } = await supabase
           .from('scraped_data_juanm')
-          .select('profile, post_type, likes_count, comments_count, engagement_rate')
-          .limit(10)
+          .select('*')
+          .limit(100)
         
         data = scrapedData || []
         error = scrapedError
+        
       } else if (lowerQuery.includes('n8n_chat_histories')) {
         const { data: chatData, error: chatError } = await supabase
           .from('n8n_chat_histories')
-          .select('id, session_id, message')
-          .limit(10)
+          .select('*')
+          .limit(100)
         
         data = chatData || []
         error = chatError
+        
       } else {
-        // Default to analytics data
+        // Default fallback to setting_analytics
         const { data: defaultData, error: defaultError } = await supabase
           .from('setting_analytics')
           .select('*')
-          .limit(5)
+          .limit(10)
         
         data = defaultData || []
         error = defaultError
       }
 
       if (error) {
+        console.error('Query error:', error)
         setQueryError(error.message)
         setQueryResult(null)
       } else {
-        // Transform the data to match our expected format
+        console.log('Query data:', data)
+        // Transform the data to table format
         if (data && data.length > 0) {
           const columns = Object.keys(data[0])
-          const rows = data.map((row: any) => columns.map(col => row[col]))
+          const rows = data.map((row: any) => columns.map(col => {
+            const value = row[col]
+            // Format complex objects for display
+            if (typeof value === 'object' && value !== null) {
+              return JSON.stringify(value)
+            }
+            return value
+          }))
           setQueryResult({ columns, rows })
         } else {
           setQueryResult({ columns: [], rows: [] })
@@ -140,6 +131,7 @@ ORDER BY total_events DESC;`)
         setQueryError(null)
       }
     } catch (err: any) {
+      console.error('Execute query error:', err)
       setQueryError(err.message || 'Failed to execute query')
       setQueryResult(null)
     }
@@ -231,11 +223,11 @@ ORDER BY total_events DESC;`)
 
               {queryResult && !isExecuting && (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
+                  <table className="w-full text-sm border border-border rounded-lg">
+                    <thead className="bg-muted/50">
                       <tr className="border-b border-border">
                         {queryResult.columns.map((column: string, index: number) => (
-                          <th key={index} className="text-left py-3 px-2 text-muted-foreground font-medium">
+                          <th key={index} className="text-left py-3 px-4 text-muted-foreground font-medium border-r border-border last:border-r-0">
                             {column}
                           </th>
                         ))}
@@ -243,10 +235,12 @@ ORDER BY total_events DESC;`)
                     </thead>
                     <tbody>
                       {queryResult.rows.map((row: any[], rowIndex: number) => (
-                        <tr key={rowIndex} className="border-b border-border/50 hover:bg-muted/30">
+                        <tr key={rowIndex} className="border-b border-border/50 hover:bg-muted/30 last:border-b-0">
                           {row.map((cell, cellIndex) => (
-                            <td key={cellIndex} className="py-3 px-2 text-foreground">
-                              {cell}
+                            <td key={cellIndex} className="py-3 px-4 text-foreground border-r border-border/50 last:border-r-0">
+                              <div className="max-w-xs truncate" title={cell}>
+                                {cell}
+                              </div>
                             </td>
                           ))}
                         </tr>
