@@ -392,12 +392,11 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
 
     return (
       <ResponsiveContainer width="100%" height={200}>
-        <FunnelChart width={400} height={200}>
+        <FunnelChart layout="horizontal" width={400} height={200}>
           <Funnel
             dataKey="value"
             data={chartData}
             isAnimationActive
-            orientation="horizontal"
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={funnelColors[index % funnelColors.length]} />
@@ -418,13 +417,16 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
           </Funnel>
           <Tooltip 
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
+              backgroundColor: 'hsl(var(--popover))',
               border: '1px solid hsl(var(--border))',
               borderRadius: '6px',
-              color: 'white'
+              color: 'white !important'
             }}
             labelStyle={{
-              color: 'white'
+              color: 'white !important'
+            }}
+            itemStyle={{
+              color: 'white !important'
             }}
             formatter={(value, name) => [
               `${value}`, 
