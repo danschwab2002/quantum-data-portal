@@ -51,7 +51,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
-                          {user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario'}
+                          {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
@@ -61,20 +61,20 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => navigate('/settings/profile')} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      <span>Mi Perfil</span>
+                      <span>My Profile</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
-                      <span>Configuración</span>
+                      <span>Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer">
                       <LifeBuoy className="mr-2 h-4 w-4" />
-                      <span>Ayuda y Documentación</span>
+                      <span>Help & Documentation</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>Cerrar Sesión</span>
+                      <span>Sign Out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

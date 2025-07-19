@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,10 +28,19 @@ const mockDatabaseConnections = [
 ]
 
 export default function Settings() {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
+  const { section } = useParams<{ section?: SettingsSection }>()
+  const navigate = useNavigate()
+  const [activeSection, setActiveSection] = useState<SettingsSection>(section || 'profile')
   const [isAdmin] = useState(true) // Mock admin status - in real app this would come from auth
   const { user } = useAuth()
   const { toast } = useToast()
+
+  // Update active section when URL changes
+  useEffect(() => {
+    if (section && ['profile', 'workspace', 'database', 'appearance'].includes(section)) {
+      setActiveSection(section as SettingsSection)
+    }
+  }, [section])
 
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -403,7 +413,10 @@ export default function Settings() {
             .map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => {
+                setActiveSection(item.id)
+                navigate(`/settings/${item.id}`)
+              }}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors",
                 activeSection === item.id

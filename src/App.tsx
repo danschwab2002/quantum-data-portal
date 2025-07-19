@@ -38,6 +38,7 @@ const App = () => (
                   <Route path="/collection/:collectionId" element={<CollectionDetail />} />
                   <Route path="/database" element={<DatabaseConnection />} />
                   <Route path="/dashboards" element={<Dashboard />} />
+                  <Route path="/settings/:section" element={<Settings />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
