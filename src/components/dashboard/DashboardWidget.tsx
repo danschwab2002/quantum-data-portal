@@ -39,6 +39,7 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
   const [isEditingName, setIsEditingName] = useState(false)
   const [newName, setNewName] = useState("")
   const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showExpandedView, setShowExpandedView] = useState(false)
   const { toast } = useToast()
 
   // Use question from widget if available, otherwise use direct question prop
@@ -179,6 +180,367 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
       default:
         return renderTableWidget()
     }
+  }
+
+  // Function to render expanded visualization with larger dimensions
+  const renderExpandedVisualization = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-96">
+          <div className="text-muted-foreground">Cargando...</div>
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="flex items-center justify-center h-96">
+          <div className="text-destructive text-sm">{error}</div>
+        </div>
+      )
+    }
+
+    if (!data || data.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-96">
+          <div className="text-muted-foreground">Sin datos</div>
+        </div>
+      )
+    }
+
+    const vizType = questionData?.visualization_type?.toLowerCase?.() || '';
+    
+    switch (vizType) {
+      case 'numero':
+        return renderExpandedNumberWidget()
+      case 'porcentaje':
+        return renderExpandedPercentageWidget()
+      case 'tabla':
+        return renderExpandedTableWidget()
+      case 'grafico-barras':
+        return renderExpandedBarChart()
+      case 'grafico-lineas':
+        return renderExpandedLineChart()
+      case 'grafico-circular':
+        return renderExpandedPieChart()
+      case 'grafico-funnel':
+        return renderExpandedFunnelChart()
+      default:
+        return renderExpandedTableWidget()
+    }
+  }
+
+  const renderExpandedNumberWidget = () => {
+    const firstRow = data[0]
+    const value = firstRow ? Object.values(firstRow)[0] : 0
+    const numericValue = Number(value) || 0
+    const changePercentage = Math.random() * 20 - 5 // Mock percentage change
+    const isPositive = changePercentage >= 0
+
+    return (
+      <div className="text-center space-y-6 py-12">
+        <div className="flex items-center justify-center">
+          <Hash className="w-12 h-12 text-primary" />
+        </div>
+        <div className="text-8xl font-bold text-foreground">
+          {typeof numericValue === 'number' ? numericValue.toLocaleString() : String(value)}
+        </div>
+        <div className="text-xl text-muted-foreground">Este mes</div>
+        <div className={`flex items-center justify-center gap-2 text-lg ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+          {isPositive ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
+          {Math.abs(changePercentage).toFixed(1)}% vs mes anterior
+        </div>
+      </div>
+    )
+  }
+
+  const renderExpandedPercentageWidget = () => {
+    const firstRow = data[0]
+    const value = firstRow ? Object.values(firstRow)[0] : 0
+    const numericValue = Number(value) || 0
+    
+    // Convert to percentage format - if value is between 0-1, multiply by 100
+    const percentageValue = numericValue <= 1 ? numericValue * 100 : numericValue
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] space-y-6">
+        <div className="flex items-center justify-center">
+          <Percent className="w-12 h-12 text-primary" />
+        </div>
+        <div className="text-8xl font-bold text-foreground">
+          {percentageValue.toFixed(1)}%
+        </div>
+        <div className="text-xl text-muted-foreground">Este mes</div>
+      </div>
+    )
+  }
+
+  const renderExpandedTableWidget = () => {
+    const keys = data.length > 0 ? Object.keys(data[0]) : []
+    
+    return (
+      <div className="overflow-hidden">
+        <div className="overflow-x-auto max-h-96">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-background">
+              <tr className="border-b border-border">
+                {keys.map((key) => (
+                  <th key={key} className="text-left p-3 text-muted-foreground font-medium">
+                    {key}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, index) => (
+                <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                  {keys.map((key) => (
+                    <td key={key} className="p-3 text-foreground">
+                      {row[key]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  const renderExpandedBarChart = () => {
+    const chartData = data.slice(0, 20).map((row, index) => {
+      const keys = Object.keys(row)
+      return {
+        name: row[keys[0]] || `Item ${index + 1}`,
+        value: Number(row[keys[1]]) || 0
+      }
+    })
+
+    return (
+      <ResponsiveContainer width="100%" height={500}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={14}
+          />
+          <YAxis 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={14}
+          />
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px'
+            }}
+          />
+          <Bar dataKey="value" fill="hsl(var(--primary))" />
+        </BarChart>
+      </ResponsiveContainer>
+    )
+  }
+
+  const renderExpandedLineChart = () => {
+    const chartData = data.slice(0, 20).map((row, index) => {
+      const keys = Object.keys(row)
+      return {
+        name: row[keys[0]] || `Point ${index + 1}`,
+        value: Number(row[keys[1]]) || 0
+      }
+    })
+
+    return (
+      <ResponsiveContainer width="100%" height={500}>
+        <LineChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={14}
+          />
+          <YAxis 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={14}
+          />
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px'
+            }}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke="hsl(var(--primary))" 
+            strokeWidth={3}
+            dot={{ fill: 'hsl(var(--primary))' }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    )
+  }
+
+  const renderExpandedPieChart = () => {
+    const chartData = data.map((row, index) => {
+      const keys = Object.keys(row)
+      return {
+        name: row[keys[0]] || `Item ${index + 1}`,
+        value: Number(row[keys[1]]) || 0
+      }
+    })
+
+    // Solo filtrar si todos los valores son 0, de lo contrario mostrar todos
+    const hasValidData = chartData.some(item => item.value > 0)
+    
+    if (!hasValidData && data.length > 0) {
+      return (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          No hay datos válidos para mostrar
+        </div>
+      )
+    }
+
+    // Paleta de colores atractivos para el gráfico circular
+    const pieColors = [
+      '#3B82F6', // Azul
+      '#10B981', // Verde
+      '#F59E0B', // Amarillo
+      '#8B5CF6', // Púrpura
+      '#EF4444', // Rojo
+      '#F97316', // Naranja
+      '#06B6D4', // Cian
+      '#EC4899'  // Rosa
+    ]
+
+    return (
+      <div style={{ width: '100%', height: '500px' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="45%"
+              innerRadius={80}
+              outerRadius={160}
+              paddingAngle={3}
+              dataKey="value"
+              stroke="none"
+            >
+              {chartData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={pieColors[index % pieColors.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '14px'
+              }}
+              labelStyle={{
+                color: 'white'
+              }}
+              itemStyle={{
+                color: 'white'
+              }}
+              formatter={(value, name) => {
+                const total = chartData.reduce((sum, item) => sum + Number(item.value), 0)
+                const percentage = ((Number(value) / total) * 100).toFixed(1)
+                return [`${value} (${percentage}%)`, name]
+              }}
+            />
+            <Legend 
+              verticalAlign="bottom" 
+              height={60}
+              wrapperStyle={{
+                color: 'hsl(var(--foreground))',
+                fontSize: '14px',
+                paddingTop: '20px'
+              }}
+              iconType="circle"
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
+  const renderExpandedFunnelChart = () => {
+    const chartData = data.map((row, index) => {
+      const keys = Object.keys(row)
+      return {
+        name: row[keys[0]] || `Stage ${index + 1}`,
+        value: Number(row[keys[1]]) || 0
+      }
+    })
+
+    // Colores personalizados para cada stage del funnel
+    const funnelColors = [
+      'hsl(217, 91%, 60%)', // Azul vibrante
+      'hsl(142, 76%, 36%)', // Verde
+      'hsl(45, 93%, 47%)',  // Amarillo/Dorado
+      'hsl(271, 81%, 56%)', // Púrpura
+      'hsl(346, 87%, 43%)', // Rojo
+      'hsl(24, 94%, 50%)',  // Naranja
+      'hsl(195, 85%, 41%)', // Cian
+      'hsl(291, 64%, 42%)'  // Magenta
+    ]
+
+    return (
+      <ResponsiveContainer width="100%" height={500}>
+        <FunnelChart layout="horizontal" width={800} height={500}>
+          <Funnel
+            dataKey="value"
+            data={chartData}
+            isAnimationActive
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={funnelColors[index % funnelColors.length]} />
+            ))}
+            <LabelList 
+              position="center" 
+              fill="white" 
+              stroke="none" 
+              fontSize={16}
+              fontWeight="bold"
+              formatter={(value, entry) => {
+                if (entry && entry.name) {
+                  return `${entry.name}\n${value}`
+                }
+                return `${value}`
+              }}
+            />
+          </Funnel>
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'hsl(var(--popover))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px',
+              color: 'white !important'
+            }}
+            labelStyle={{
+              color: 'white !important'
+            }}
+            itemStyle={{
+              color: 'white !important'
+            }}
+            formatter={(value, name) => [
+              `${value}`, 
+              name || 'Valor'
+            ]}
+            labelFormatter={(label) => `Stage: ${label}`}
+          />
+        </FunnelChart>
+      </ResponsiveContainer>
+    )
   }
 
   const renderNumberWidget = () => {
@@ -520,77 +882,100 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
   }
 
   return (
-    <Card className="bg-card/50 border-border group relative">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-foreground text-base flex items-center gap-2">
-            {getIcon()}
-            {questionData?.name || 'Sin título'}
-          </CardTitle>
-          
-          {/* Edit Button - only show if we have a widget (not standalone question) */}
-          {widget && (
-            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-muted"
-                  onClick={() => setNewName(questionData?.name || "")}
-                >
-                  <Pencil className="w-3 h-3" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Editar Widget</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6">
-                  {/* Edit Name Section */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Nombre del Widget</label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="Nombre del widget"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleNameUpdate()
-                        }}
-                      />
-                      <Button onClick={handleNameUpdate} size="sm">
-                        <Check className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Delete Section */}
-                  <div className="space-y-3 pt-4 border-t">
-                    <label className="text-sm font-medium text-destructive">Zona Peligrosa</label>
-                    <div className="flex items-center justify-between p-3 border border-destructive/20 rounded-lg bg-destructive/5">
-                      <div>
-                        <p className="text-sm font-medium">Eliminar Widget</p>
-                        <p className="text-xs text-muted-foreground">Esta acción no se puede deshacer</p>
+    <>
+      <Card 
+        className="bg-card/50 border-border group relative cursor-pointer hover:shadow-lg transition-all duration-200 hover:border-primary/50"
+        onClick={() => setShowExpandedView(true)}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-foreground text-base flex items-center gap-2">
+              {getIcon()}
+              {questionData?.name || 'Sin título'}
+            </CardTitle>
+            
+            {/* Edit Button - only show if we have a widget (not standalone question) */}
+            {widget && (
+              <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-muted"
+                    onClick={(e) => {
+                      e.stopPropagation() // Prevent card click
+                      setNewName(questionData?.name || "")
+                    }}
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Editar Widget</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    {/* Edit Name Section */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Nombre del Widget</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          placeholder="Nombre del widget"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleNameUpdate()
+                          }}
+                        />
+                        <Button onClick={handleNameUpdate} size="sm">
+                          <Check className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={handleDeleteWidget}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Eliminar
-                      </Button>
+                    </div>
+
+                    {/* Delete Section */}
+                    <div className="space-y-3 pt-4 border-t">
+                      <label className="text-sm font-medium text-destructive">Zona Peligrosa</label>
+                      <div className="flex items-center justify-between p-3 border border-destructive/20 rounded-lg bg-destructive/5">
+                        <div>
+                          <p className="text-sm font-medium">Eliminar Widget</p>
+                          <p className="text-xs text-muted-foreground">Esta acción no se puede deshacer</p>
+                        </div>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={handleDeleteWidget}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Eliminar
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {renderVisualization()}
-      </CardContent>
-    </Card>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent onClick={(e) => e.stopPropagation()}>
+          {renderVisualization()}
+        </CardContent>
+      </Card>
+
+      {/* Expanded View Modal */}
+      <Dialog open={showExpandedView} onOpenChange={setShowExpandedView}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              {getIcon()}
+              {questionData?.name || 'Sin título'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[75vh]">
+            {renderExpandedVisualization()}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
