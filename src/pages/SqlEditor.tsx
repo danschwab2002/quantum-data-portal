@@ -5,21 +5,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Play, Save, Database, Clock, CheckCircle, AlertCircle } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
 
 const SqlEditor = () => {
-  const [query, setQuery] = useState(`-- Sample query for appointment setter analytics
+  const [query, setQuery] = useState(`-- Sample query from your analytics data
 SELECT 
-  DATE_TRUNC('day', created_at) as date,
-  COUNT(*) as total_leads,
-  COUNT(CASE WHEN status = 'appointment_set' THEN 1 END) as appointments,
-  ROUND(
-    (COUNT(CASE WHEN status = 'appointment_set' THEN 1 END)::float / COUNT(*)) * 100, 
-    2
-  ) as conversion_rate
-FROM leads 
+  event_type,
+  COUNT(*) as total_events,
+  account
+FROM setting_analytics
 WHERE created_at >= NOW() - INTERVAL '30 days'
-GROUP BY DATE_TRUNC('day', created_at)
-ORDER BY date DESC;`)
+GROUP BY event_type, account
+ORDER BY total_events DESC;`)
 
   const [isExecuting, setIsExecuting] = useState(false)
   const [queryResult, setQueryResult] = useState<any>(null)
@@ -41,17 +38,70 @@ ORDER BY date DESC;`)
     setIsExecuting(true)
     setQueryError(null)
 
-    // Simulate query execution
-    setTimeout(() => {
-      if (query.toLowerCase().includes('error')) {
-        setQueryError("Syntax error: Invalid SQL syntax near 'error'")
+    try {
+      // For now, we'll simulate query execution but use real data from Supabase
+      // In a production environment, you'd want to create a secure RPC function
+      // to execute arbitrary SQL queries
+      
+      // Sample query execution based on the query content
+      let data: any[] = []
+      let error: any = null
+
+      if (query.toLowerCase().includes('setting_analytics')) {
+        const { data: analyticsData, error: analyticsError } = await supabase
+          .from('setting_analytics')
+          .select('event_type, account, created_at')
+          .limit(10)
+        
+        data = analyticsData || []
+        error = analyticsError
+      } else if (query.toLowerCase().includes('scraped_data_juanm')) {
+        const { data: scrapedData, error: scrapedError } = await supabase
+          .from('scraped_data_juanm')
+          .select('profile, post_type, likes_count, comments_count, engagement_rate')
+          .limit(10)
+        
+        data = scrapedData || []
+        error = scrapedError
+      } else if (query.toLowerCase().includes('n8n_chat_histories')) {
+        const { data: chatData, error: chatError } = await supabase
+          .from('n8n_chat_histories')
+          .select('id, session_id, message')
+          .limit(10)
+        
+        data = chatData || []
+        error = chatError
+      } else {
+        // Default to analytics data
+        const { data: defaultData, error: defaultError } = await supabase
+          .from('setting_analytics')
+          .select('*')
+          .limit(5)
+        
+        data = defaultData || []
+        error = defaultError
+      }
+
+      if (error) {
+        setQueryError(error.message)
         setQueryResult(null)
       } else {
-        setQueryResult(sampleResult)
+        // Transform the data to match our expected format
+        if (data && data.length > 0) {
+          const columns = Object.keys(data[0])
+          const rows = data.map((row: any) => columns.map(col => row[col]))
+          setQueryResult({ columns, rows })
+        } else {
+          setQueryResult({ columns: [], rows: [] })
+        }
         setQueryError(null)
       }
+    } catch (err: any) {
+      setQueryError(err.message || 'Failed to execute query')
+      setQueryResult(null)
+    } finally {
       setIsExecuting(false)
-    }, 1500)
+    }
   }
 
   return (
@@ -184,33 +234,37 @@ ORDER BY date DESC;`)
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-foreground mb-2">leads</p>
+                <p className="text-sm font-medium text-foreground mb-2">setting_analytics</p>
                 <div className="space-y-1 text-xs text-muted-foreground pl-2">
-                  <p>• id (uuid)</p>
+                  <p>• id (text)</p>
                   <p>• created_at (timestamp)</p>
-                  <p>• status (text)</p>
-                  <p>• phone (text)</p>
-                  <p>• email (text)</p>
+                  <p>• event_type (text)</p>
+                  <p>• account (text)</p>
+                  <p>• metadata (jsonb)</p>
                 </div>
               </div>
               <Separator />
               <div>
-                <p className="text-sm font-medium text-foreground mb-2">appointments</p>
+                <p className="text-sm font-medium text-foreground mb-2">scraped_data_juanm</p>
                 <div className="space-y-1 text-xs text-muted-foreground pl-2">
-                  <p>• id (uuid)</p>
-                  <p>• lead_id (uuid)</p>
-                  <p>• scheduled_at (timestamp)</p>
-                  <p>• status (text)</p>
+                  <p>• profile (text)</p>
+                  <p>• post_url (text)</p>
+                  <p>• post_type (text)</p>
+                  <p>• post_caption (text)</p>
+                  <p>• likes_count (integer)</p>
+                  <p>• comments_count (integer)</p>
+                  <p>• engagement_rate (numeric)</p>
+                  <p>• analyze_post (text)</p>
+                  <p>• isrecent (text)</p>
                 </div>
               </div>
               <Separator />
               <div>
-                <p className="text-sm font-medium text-foreground mb-2">ai_calls</p>
+                <p className="text-sm font-medium text-foreground mb-2">n8n_chat_histories</p>
                 <div className="space-y-1 text-xs text-muted-foreground pl-2">
-                  <p>• id (uuid)</p>
-                  <p>• lead_id (uuid)</p>
-                  <p>• duration (integer)</p>
-                  <p>• outcome (text)</p>
+                  <p>• id (integer)</p>
+                  <p>• session_id (varchar)</p>
+                  <p>• message (jsonb)</p>
                 </div>
               </div>
             </CardContent>
@@ -223,17 +277,17 @@ ORDER BY date DESC;`)
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                "Daily conversion rate",
-                "Monthly revenue by source", 
-                "AI call success rate"
-              ].map((query, index) => (
+                "Analytics events by type",
+                "Recent social media posts", 
+                "Chat session analysis"
+              ].map((queryName, index) => (
                 <Button 
                   key={index}
                   variant="ghost" 
                   className="w-full justify-start text-xs h-8 text-muted-foreground hover:text-foreground"
                 >
                   <Clock className="w-3 h-3 mr-2" />
-                  {query}
+                  {queryName}
                 </Button>
               ))}
             </CardContent>
