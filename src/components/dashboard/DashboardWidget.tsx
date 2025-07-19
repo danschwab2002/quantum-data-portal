@@ -2,8 +2,12 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
-import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon } from "lucide-react"
+import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface DashboardWidgetProps {
   question?: {
@@ -33,6 +37,10 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
   const [data, setData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const { toast } = useToast()
 
   // Use question from widget if available, otherwise use direct question prop
   const questionData = widget?.question || question
@@ -72,6 +80,60 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
       executeQuery()
     }
   }, [questionData?.query])
+
+  const handleNameUpdate = async () => {
+    if (!newName.trim() || !questionData?.id) return
+
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ name: newName.trim() })
+        .eq('id', questionData.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Éxito",
+        description: "Nombre del widget actualizado correctamente"
+      })
+
+      setIsEditingName(false)
+      if (onUpdate) onUpdate()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDeleteWidget = async () => {
+    if (!widget?.id) return
+
+    try {
+      const { error } = await supabase
+        .from('dashboard_widgets')
+        .delete()
+        .eq('id', widget.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Éxito",
+        description: "Widget eliminado correctamente"
+      })
+
+      setShowEditDialog(false)
+      if (onUpdate) onUpdate()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      })
+    }
+  }
 
   const renderVisualization = () => {
     if (isLoading) {
@@ -270,12 +332,73 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
   }
 
   return (
-    <Card className="bg-card/50 border-border">
+    <Card className="bg-card/50 border-border group relative">
       <CardHeader className="pb-3">
-        <CardTitle className="text-foreground text-base flex items-center gap-2">
-          {getIcon()}
-          {questionData?.name || 'Sin título'}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-foreground text-base flex items-center gap-2">
+            {getIcon()}
+            {questionData?.name || 'Sin título'}
+          </CardTitle>
+          
+          {/* Edit Button - only show if we have a widget (not standalone question) */}
+          {widget && (
+            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-muted"
+                  onClick={() => setNewName(questionData?.name || "")}
+                >
+                  <Pencil className="w-3 h-3" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Editar Widget</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                  {/* Edit Name Section */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Nombre del Widget</label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Nombre del widget"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleNameUpdate()
+                        }}
+                      />
+                      <Button onClick={handleNameUpdate} size="sm">
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Delete Section */}
+                  <div className="space-y-3 pt-4 border-t">
+                    <label className="text-sm font-medium text-destructive">Zona Peligrosa</label>
+                    <div className="flex items-center justify-between p-3 border border-destructive/20 rounded-lg bg-destructive/5">
+                      <div>
+                        <p className="text-sm font-medium">Eliminar Widget</p>
+                        <p className="text-xs text-muted-foreground">Esta acción no se puede deshacer</p>
+                      </div>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={handleDeleteWidget}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {renderVisualization()}
