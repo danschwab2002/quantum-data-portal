@@ -325,13 +325,15 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         name: row[keys[0]] || `Item ${index + 1}`,
         value: Number(row[keys[1]]) || 0
       }
-    }).filter(item => item.value > 0) // Solo mostrar datos con valores positivos
+    })
 
-    // Si no hay datos válidos, mostrar mensaje
-    if (chartData.length === 0) {
+    // Solo filtrar si todos los valores son 0, de lo contrario mostrar todos
+    const hasValidData = chartData.some(item => item.value > 0)
+    
+    if (!hasValidData && data.length > 0) {
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground">
-          No hay datos para mostrar
+          No hay datos válidos para mostrar
         </div>
       )
     }
