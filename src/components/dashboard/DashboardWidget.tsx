@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer } from 'recharts'
-import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X, PieChart as PieChartIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -171,6 +171,8 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         return renderBarChart()
       case 'grafico-lineas':
         return renderLineChart()
+      case 'grafico-circular':
+        return renderPieChart()
       default:
         return renderTableWidget()
     }
@@ -314,6 +316,57 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
     )
   }
 
+  const renderPieChart = () => {
+    const chartData = data.slice(0, 8).map((row, index) => {
+      const keys = Object.keys(row)
+      return {
+        name: row[keys[0]] || `Item ${index + 1}`,
+        value: Number(row[keys[1]]) || 0
+      }
+    })
+
+    // Colores para el gráfico circular
+    const colors = [
+      'hsl(var(--primary))',
+      'hsl(var(--secondary))',
+      'hsl(var(--accent))',
+      'hsl(var(--muted))',
+      'hsl(220, 70%, 60%)',
+      'hsl(280, 70%, 60%)',
+      'hsl(340, 70%, 60%)',
+      'hsl(40, 70%, 60%)'
+    ]
+
+    return (
+      <ResponsiveContainer width="100%" height={200}>
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            outerRadius={70}
+            fill="hsl(var(--primary))"
+            dataKey="value"
+            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+            labelLine={false}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px'
+            }}
+            formatter={(value) => [`${value}`, 'Valor']}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    )
+  }
+
   const getIcon = () => {
     if (!questionData?.visualization_type) return <BarChart3 className="w-4 h-4" />
     
@@ -326,6 +379,8 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         return <BarChart3 className="w-4 h-4" />
       case 'grafico-lineas':
         return <LineChartIcon className="w-4 h-4" />
+      case 'grafico-circular':
+        return <PieChartIcon className="w-4 h-4" />
       default:
         return <BarChart3 className="w-4 h-4" />
     }

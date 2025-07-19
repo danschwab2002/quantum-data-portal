@@ -308,9 +308,10 @@ WHERE event_type = 'connection_message_sent';`)
                             <SelectContent>
                               <SelectItem value="numero">Número</SelectItem>
                               <SelectItem value="tabla">Tabla</SelectItem>
-                              <SelectItem value="grafico-barras">Gráfico de Barras</SelectItem>
-                              <SelectItem value="grafico-lineas">Gráfico de Líneas</SelectItem>
-                            </SelectContent>
+                            <SelectItem value="grafico-barras">Gráfico de Barras</SelectItem>
+                            <SelectItem value="grafico-lineas">Gráfico de Líneas</SelectItem>
+                            <SelectItem value="grafico-circular">Gráfico Circular</SelectItem>
+                          </SelectContent>
                           </Select>
                         </div>
                         <div className="grid gap-2">
