@@ -158,6 +158,12 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      execute_sql_query: {
+        Args: { query_text: string }
+        Returns: {
+          result: Json
+        }[]
+      }
       halfvec_avg: {
         Args: { "": number[] }
         Returns: unknown

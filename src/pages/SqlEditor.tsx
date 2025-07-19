@@ -34,100 +34,49 @@ WHERE event_type = 'connection_message_sent';`)
 
   const executeBasicQuery = async () => {
     try {
-      const lowerQuery = query.toLowerCase().trim()
       console.log('Executing query:', query)
       
-      // Handle COUNT queries specifically
-      if (lowerQuery.includes('count(') && lowerQuery.includes('setting_analytics')) {
-        const { data, error, count } = await supabase
-          .from('setting_analytics')
-          .select('*', { count: 'exact', head: true })
-          .eq('event_type', 'connection_message_sent')
-        
-        if (error) {
-          console.error('Supabase error:', error)
-          setQueryError(error.message)
-          setQueryResult(null)
-        } else {
-          console.log('Count result:', count)
-          setQueryResult({
-            columns: ['count'],
-            rows: [[count || 0]]
-          })
-          setQueryError(null)
-        }
-        return
-      }
+      // Use the SQL function to execute the query directly
+      const { data, error } = await supabase
+        .rpc('execute_sql_query', { query_text: query.trim() })
       
-      // Handle regular SELECT queries
-      let data: any[] = []
-      let error: any = null
-
-      if (lowerQuery.includes('setting_analytics')) {
-        let supabaseQuery = supabase.from('setting_analytics').select('*')
-        
-        // Apply WHERE conditions if present
-        if (lowerQuery.includes('where') && lowerQuery.includes('event_type')) {
-          const eventTypeMatch = query.match(/event_type\s*=\s*['"](.*?)['"]/i)
-          if (eventTypeMatch) {
-            supabaseQuery = supabaseQuery.eq('event_type', eventTypeMatch[1])
-          }
-        }
-        
-        const { data: queryData, error: queryError } = await supabaseQuery.limit(100)
-        data = queryData || []
-        error = queryError
-        
-      } else if (lowerQuery.includes('scraped_data_juanm')) {
-        const { data: scrapedData, error: scrapedError } = await supabase
-          .from('scraped_data_juanm')
-          .select('*')
-          .limit(100)
-        
-        data = scrapedData || []
-        error = scrapedError
-        
-      } else if (lowerQuery.includes('n8n_chat_histories')) {
-        const { data: chatData, error: chatError } = await supabase
-          .from('n8n_chat_histories')
-          .select('*')
-          .limit(100)
-        
-        data = chatData || []
-        error = chatError
-        
-      } else {
-        // Default fallback to setting_analytics
-        const { data: defaultData, error: defaultError } = await supabase
-          .from('setting_analytics')
-          .select('*')
-          .limit(10)
-        
-        data = defaultData || []
-        error = defaultError
-      }
-
       if (error) {
-        console.error('Query error:', error)
+        console.error('Supabase RPC error:', error)
         setQueryError(error.message)
         setQueryResult(null)
-      } else {
-        console.log('Query data:', data)
-        // Transform the data to table format
-        if (data && data.length > 0) {
-          const columns = Object.keys(data[0])
-          const rows = data.map((row: any) => columns.map(col => {
-            const value = row[col]
-            // Format complex objects for display
-            if (typeof value === 'object' && value !== null) {
-              return JSON.stringify(value)
-            }
-            return value
-          }))
+        return
+      }
+
+      console.log('RPC result:', data)
+      
+      if (data && data.length > 0) {
+        const resultArray = data[0].result
+        
+        if (Array.isArray(resultArray) && resultArray.length > 0) {
+          // Extract columns from the first row
+          const columns = Object.keys(resultArray[0])
+          
+          // Extract rows data
+          const rows = resultArray.map((row: any) => 
+            columns.map(col => {
+              const value = row[col]
+              // Format complex objects for display
+              if (typeof value === 'object' && value !== null) {
+                return JSON.stringify(value)
+              }
+              return value
+            })
+          )
+          
           setQueryResult({ columns, rows })
+          setQueryError(null)
         } else {
+          // Empty result
           setQueryResult({ columns: [], rows: [] })
+          setQueryError(null)
         }
+      } else {
+        setQueryResult({ columns: [], rows: [] })
         setQueryError(null)
       }
     } catch (err: any) {
