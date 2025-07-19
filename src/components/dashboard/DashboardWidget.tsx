@@ -378,30 +378,55 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
       }
     })
 
+    // Colores personalizados para cada stage del funnel
+    const funnelColors = [
+      'hsl(217, 91%, 60%)', // Azul vibrante
+      'hsl(142, 76%, 36%)', // Verde
+      'hsl(45, 93%, 47%)',  // Amarillo/Dorado
+      'hsl(271, 81%, 56%)', // Púrpura
+      'hsl(346, 87%, 43%)', // Rojo
+      'hsl(24, 94%, 50%)',  // Naranja
+      'hsl(195, 85%, 41%)', // Cian
+      'hsl(291, 64%, 42%)'  // Magenta
+    ]
+
     return (
       <ResponsiveContainer width="100%" height={200}>
-        <FunnelChart>
+        <FunnelChart layout="vertical">
           <Funnel
             dataKey="value"
             data={chartData}
             isAnimationActive
-            fill="hsl(var(--primary))"
           >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={funnelColors[index % funnelColors.length]} />
+            ))}
             <LabelList 
               position="center" 
               fill="white" 
               stroke="none" 
-              fontSize={12}
-              formatter={(value, entry) => entry ? `${entry.name}: ${value}` : `${value}`}
+              fontSize={14}
+              fontWeight="bold"
+              formatter={(value, entry) => {
+                if (entry && entry.name) {
+                  return `${entry.name}\n${value}`
+                }
+                return `${value}`
+              }}
             />
           </Funnel>
           <Tooltip 
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
-              borderRadius: '6px'
+              borderRadius: '6px',
+              color: 'hsl(var(--foreground))'
             }}
-            formatter={(value) => [`${value}`, 'Valor']}
+            formatter={(value, name) => [
+              `${value}`, 
+              name || 'Valor'
+            ]}
+            labelFormatter={(label) => `Stage: ${label}`}
           />
         </FunnelChart>
       </ResponsiveContainer>
