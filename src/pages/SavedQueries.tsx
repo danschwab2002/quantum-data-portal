@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Database, Calendar, FileText } from "lucide-react";
+import { Database, Calendar, FileText, Pencil, Trash2, Check, X } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface Question {
   id: string;
@@ -16,6 +19,8 @@ interface Question {
 const SavedQueries = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,12 +72,80 @@ const SavedQueries = () => {
     return query.length > maxLength ? query.substring(0, maxLength) + '...' : query;
   };
 
+  const handleEditStart = (question: Question, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingId(question.id)
+    setEditName(question.name)
+  }
+
+  const handleEditSave = async (questionId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ name: editName })
+        .eq('id', questionId)
+
+      if (error) throw error
+
+      setQuestions(prev => prev.map(q => 
+        q.id === questionId ? { ...q, name: editName } : q
+      ))
+
+      toast({
+        title: "Éxito",
+        description: "Consulta actualizada correctamente",
+      })
+    } catch (error) {
+      console.error('Error updating question:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la consulta",
+        variant: "destructive",
+      })
+    } finally {
+      setEditingId(null)
+      setEditName("")
+    }
+  }
+
+  const handleEditCancel = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingId(null)
+    setEditName("")
+  }
+
+  const handleDelete = async (questionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', questionId)
+
+      if (error) throw error
+
+      setQuestions(prev => prev.filter(q => q.id !== questionId))
+
+      toast({
+        title: "Éxito",
+        description: "Consulta eliminada correctamente",
+      })
+    } catch (error) {
+      console.error('Error deleting question:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la consulta",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">Loading saved queries...</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -100,11 +173,36 @@ const SavedQueries = () => {
       ) : (
         <div className="grid gap-4">
           {questions.map((question) => (
-            <Card key={question.id} className="transition-shadow hover:shadow-md">
+            <Card key={question.id} className="transition-shadow hover:shadow-md group">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <CardTitle className="text-xl">{question.name}</CardTitle>
+                  <div className="space-y-2 flex-1">
+                    {editingId === question.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="text-lg font-semibold"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => handleEditSave(question.id, e)}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleEditCancel}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <CardTitle className="text-xl">{question.name}</CardTitle>
+                    )}
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
@@ -115,6 +213,47 @@ const SavedQueries = () => {
                       </Badge>
                     </div>
                   </div>
+                  {editingId !== question.id && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => handleEditStart(question, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => e.stopPropagation()}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar consulta?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. La consulta "{question.name}" será eliminada permanentemente.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(question.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
