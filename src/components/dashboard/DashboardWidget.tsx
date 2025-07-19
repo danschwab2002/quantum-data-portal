@@ -53,6 +53,10 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
   }, [question.query])
 
   const renderVisualization = () => {
+    // Debug log para ver qué tipo de visualización se está recibiendo
+    console.log('Question visualization_type:', question.visualization_type)
+    console.log('Question visualization_type (lowercase):', question.visualization_type?.toLowerCase())
+    
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-32">
@@ -77,16 +81,24 @@ export function DashboardWidget({ question }: DashboardWidgetProps) {
       )
     }
 
-    switch (question.visualization_type.toLowerCase()) {
+    const vizType = question.visualization_type?.toLowerCase?.() || '';
+    console.log('Switch case matching against:', vizType)
+    
+    switch (vizType) {
       case 'número':
+        console.log('Rendering number widget')
         return renderNumberWidget()
       case 'tabla':
+        console.log('Rendering table widget')
         return renderTableWidget()
       case 'gráfico de barras':
+        console.log('Rendering bar chart')
         return renderBarChart()
       case 'gráfico de líneas':
+        console.log('Rendering line chart')
         return renderLineChart()
       default:
+        console.log('Rendering default table widget for type:', vizType)
         return renderTableWidget()
     }
   }
