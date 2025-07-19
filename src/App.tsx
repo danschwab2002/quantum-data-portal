@@ -13,6 +13,7 @@ import Collections from "./pages/Collections";
 import CollectionDetail from "./pages/CollectionDetail";
 import DatabaseConnection from "./pages/DatabaseConnection";
 import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,7 +38,7 @@ const App = () => (
                   <Route path="/collection/:collectionId" element={<CollectionDetail />} />
                   <Route path="/database" element={<DatabaseConnection />} />
                   <Route path="/dashboards" element={<Dashboard />} />
-                  <Route path="/settings" element={<Dashboard />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AppLayout>
