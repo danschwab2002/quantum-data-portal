@@ -98,8 +98,8 @@ export function AppSidebar() {
               {navigationItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls}>
-                      <item.icon className="w-4 h-4 bg-slate-950" />
-                      {!collapsed && <span className="text-slate-50">{item.title}</span>}
+                      <item.icon className="w-4 h-4 text-white" />
+                      {!collapsed && <span className="text-white">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>)}
@@ -129,7 +129,7 @@ export function AppSidebar() {
                       className="w-full justify-start h-8 px-3 text-sm font-normal text-white hover:text-white hover:bg-white/10 hover:scale-105 transition-all"
                       onClick={() => navigate(`/dashboard/${dashboard.id}`)}
                     >
-                      <LayoutDashboard className="w-3 h-3 mr-2" />
+                      <LayoutDashboard className="w-3 h-3 mr-2 text-white" />
                       {dashboard.name}
                     </Button>
                   ))
@@ -141,7 +141,7 @@ export function AppSidebar() {
         {/* Quick Actions */}
         {!collapsed && <div className="mt-auto p-4 border-t border-sidebar-border">
             <Button onClick={() => navigate('/sql-editor')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow">
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2 text-white" />
               New Question
             </Button>
           </div>}
