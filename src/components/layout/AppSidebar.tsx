@@ -76,7 +76,7 @@ export function AppSidebar() {
   useEffect(() => {
     fetchDashboards();
   }, []);
-  return <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
+  return <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon" variant="inset">
       <SidebarContent className="bg-sidebar border-r border-sidebar-border">
         {/* Header */}
         <div className="p-6 border-b border-sidebar-border">
