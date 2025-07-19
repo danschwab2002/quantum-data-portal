@@ -63,7 +63,7 @@ export function AppSidebar() {
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
       ? "bg-primary text-primary-foreground font-medium shadow-glow" 
-      : "hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-smooth"
+      : "text-white border-white/20 hover:scale-105 transition-smooth"
 
   const toggleCollection = (name: string) => {
     setExpandedCollections(prev =>
