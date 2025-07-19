@@ -263,7 +263,7 @@ const CollectionDetail = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Crear Nueva Pregunta
+                Create New Question
               </DropdownMenuItem>
               <AddExistingQuestionModal 
                 collectionId={collectionId!} 
@@ -271,7 +271,7 @@ const CollectionDetail = () => {
               >
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                   <FileText className="h-4 w-4 mr-2" />
-                  Agregar Pregunta Existente
+                  Add Existing Question
                 </DropdownMenuItem>
               </AddExistingQuestionModal>
             </DropdownMenuContent>
@@ -332,7 +332,7 @@ const CollectionDetail = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Crear Nueva Pregunta
+                  Create New Question
                 </DropdownMenuItem>
                 <AddExistingQuestionModal 
                   collectionId={collectionId!} 
@@ -340,7 +340,7 @@ const CollectionDetail = () => {
                 >
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <FileText className="h-4 w-4 mr-2" />
-                    Agregar Pregunta Existente
+                    Add Existing Question
                   </DropdownMenuItem>
                 </AddExistingQuestionModal>
               </DropdownMenuContent>
@@ -363,7 +363,7 @@ const CollectionDetail = () => {
                   <DropdownMenuContent align="center">
                     <DropdownMenuItem onClick={() => navigate(`/sql-editor?collection=${collectionId}`)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Crear Nueva Pregunta
+                      Create New Question
                     </DropdownMenuItem>
                     <AddExistingQuestionModal 
                       collectionId={collectionId!} 
@@ -371,7 +371,7 @@ const CollectionDetail = () => {
                     >
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <FileText className="h-4 w-4 mr-2" />
-                        Agregar Pregunta Existente
+                        Add Existing Question
                       </DropdownMenuItem>
                     </AddExistingQuestionModal>
                   </DropdownMenuContent>
@@ -451,7 +451,7 @@ const CollectionDetail = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate(`/dashboard`)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Crear Nuevo Dashboard
+                  Create New Dashboard
                 </DropdownMenuItem>
                 <AddExistingDashboardModal 
                   collectionId={collectionId!} 
@@ -459,7 +459,7 @@ const CollectionDetail = () => {
                 >
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <LayoutDashboard className="h-4 w-4 mr-2" />
-                    Agregar Dashboard Existente
+                    Add Existing Dashboard
                   </DropdownMenuItem>
                 </AddExistingDashboardModal>
               </DropdownMenuContent>
@@ -482,7 +482,7 @@ const CollectionDetail = () => {
                   <DropdownMenuContent align="center">
                     <DropdownMenuItem onClick={() => navigate(`/dashboard`)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Crear Nuevo Dashboard
+                      Create New Dashboard
                     </DropdownMenuItem>
                     <AddExistingDashboardModal 
                       collectionId={collectionId!} 
@@ -490,7 +490,7 @@ const CollectionDetail = () => {
                     >
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <LayoutDashboard className="h-4 w-4 mr-2" />
-                        Agregar Dashboard Existente
+                        Add Existing Dashboard
                       </DropdownMenuItem>
                     </AddExistingDashboardModal>
                   </DropdownMenuContent>

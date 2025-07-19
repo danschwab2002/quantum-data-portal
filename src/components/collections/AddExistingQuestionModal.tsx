@@ -72,7 +72,7 @@ export function AddExistingQuestionModal({ collectionId, onQuestionAdded, childr
       console.error('Error fetching questions:', error)
       toast({
         title: "Error",
-        description: "No se pudieron cargar las preguntas disponibles",
+        description: "Failed to load available questions",
         variant: "destructive",
       })
     } finally {
@@ -94,8 +94,8 @@ export function AddExistingQuestionModal({ collectionId, onQuestionAdded, childr
       if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Pregunta agregada a la colección",
+        title: "Success",
+        description: "Question added to collection",
       })
 
       // Remove the question from available list
@@ -105,7 +105,7 @@ export function AddExistingQuestionModal({ collectionId, onQuestionAdded, childr
       console.error('Error adding question:', error)
       toast({
         title: "Error",
-        description: "No se pudo agregar la pregunta a la colección",
+        description: "Failed to add question to collection",
         variant: "destructive",
       })
     } finally {
@@ -132,14 +132,14 @@ export function AddExistingQuestionModal({ collectionId, onQuestionAdded, childr
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Agregar Pregunta Existente</DialogTitle>
+          <DialogTitle>Add Existing Question</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 flex-1 overflow-hidden">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Buscar preguntas..."
+              placeholder="Search questions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -149,13 +149,13 @@ export function AddExistingQuestionModal({ collectionId, onQuestionAdded, childr
           <div className="overflow-y-auto flex-1 space-y-3 max-h-96">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">Cargando preguntas...</div>
+                <div className="text-muted-foreground">Loading questions...</div>
               </div>
             ) : filteredQuestions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <FileText className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground text-center">
-                  {searchTerm ? "No se encontraron preguntas" : "No hay preguntas disponibles para agregar"}
+                  {searchTerm ? "No questions found" : "No questions available to add"}
                 </p>
               </div>
             ) : (
@@ -177,7 +177,7 @@ export function AddExistingQuestionModal({ collectionId, onQuestionAdded, childr
                         onClick={() => handleAddQuestion(question.id)}
                         disabled={addingIds.has(question.id)}
                       >
-                        {addingIds.has(question.id) ? "Agregando..." : "Agregar"}
+                        {addingIds.has(question.id) ? "Adding..." : "Add"}
                       </Button>
                     </div>
                   </CardHeader>

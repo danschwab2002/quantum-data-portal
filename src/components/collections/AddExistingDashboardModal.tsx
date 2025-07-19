@@ -71,7 +71,7 @@ export function AddExistingDashboardModal({ collectionId, onDashboardAdded, chil
       console.error('Error fetching dashboards:', error)
       toast({
         title: "Error",
-        description: "No se pudieron cargar los dashboards disponibles",
+        description: "Failed to load available dashboards",
         variant: "destructive",
       })
     } finally {
@@ -93,8 +93,8 @@ export function AddExistingDashboardModal({ collectionId, onDashboardAdded, chil
       if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Dashboard agregado a la colección",
+        title: "Success",
+        description: "Dashboard added to collection",
       })
 
       // Remove the dashboard from available list
@@ -104,7 +104,7 @@ export function AddExistingDashboardModal({ collectionId, onDashboardAdded, chil
       console.error('Error adding dashboard:', error)
       toast({
         title: "Error",
-        description: "No se pudo agregar el dashboard a la colección",
+        description: "Failed to add dashboard to collection",
         variant: "destructive",
       })
     } finally {
@@ -131,14 +131,14 @@ export function AddExistingDashboardModal({ collectionId, onDashboardAdded, chil
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Agregar Dashboard Existente</DialogTitle>
+          <DialogTitle>Add Existing Dashboard</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 flex-1 overflow-hidden">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Buscar dashboards..."
+              placeholder="Search dashboards..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -148,13 +148,13 @@ export function AddExistingDashboardModal({ collectionId, onDashboardAdded, chil
           <div className="overflow-y-auto flex-1 space-y-3 max-h-96">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">Cargando dashboards...</div>
+                <div className="text-muted-foreground">Loading dashboards...</div>
               </div>
             ) : filteredDashboards.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <LayoutDashboard className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground text-center">
-                  {searchTerm ? "No se encontraron dashboards" : "No hay dashboards disponibles para agregar"}
+                  {searchTerm ? "No dashboards found" : "No dashboards available to add"}
                 </p>
               </div>
             ) : (
@@ -178,7 +178,7 @@ export function AddExistingDashboardModal({ collectionId, onDashboardAdded, chil
                         onClick={() => handleAddDashboard(dashboard.id)}
                         disabled={addingIds.has(dashboard.id)}
                       >
-                        {addingIds.has(dashboard.id) ? "Agregando..." : "Agregar"}
+                        {addingIds.has(dashboard.id) ? "Adding..." : "Add"}
                       </Button>
                     </div>
                   </CardHeader>
