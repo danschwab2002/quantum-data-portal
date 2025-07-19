@@ -10,6 +10,7 @@ import CustomDashboard from "./pages/CustomDashboard";
 import SqlEditor from "./pages/SqlEditor";
 import SavedQueries from "./pages/SavedQueries";
 import Collections from "./pages/Collections";
+import CollectionDetail from "./pages/CollectionDetail";
 import DatabaseConnection from "./pages/DatabaseConnection";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => (
                   <Route path="/sql-editor" element={<SqlEditor />} />
                   <Route path="/saved-queries" element={<SavedQueries />} />
                   <Route path="/collections" element={<Collections />} />
+                  <Route path="/collection/:collectionId" element={<CollectionDetail />} />
                   <Route path="/database" element={<DatabaseConnection />} />
                   <Route path="/dashboards" element={<Dashboard />} />
                   <Route path="/settings" element={<Dashboard />} />
