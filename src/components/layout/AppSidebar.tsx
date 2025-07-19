@@ -126,7 +126,7 @@ export function AppSidebar() {
                     <CollapsibleTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="w-full justify-start h-8 px-2 text-sm font-normal hover:bg-secondary/80"
+                        className="w-full justify-start h-8 px-2 text-sm font-normal text-white hover:bg-secondary/80 hover:scale-105 transition-smooth"
                       >
                         {expandedCollections.includes(collection.name) ? (
                           <ChevronDown className="w-3 h-3 mr-2" />
@@ -142,7 +142,7 @@ export function AppSidebar() {
                         <Button
                           key={item}
                           variant="ghost"
-                          className="w-full justify-start h-7 px-2 text-xs font-normal text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                          className="w-full justify-start h-7 px-2 text-xs font-normal text-white hover:bg-secondary/50 hover:scale-105 transition-smooth"
                         >
                           <FileQuestion className="w-3 h-3 mr-2" />
                           {item}
