@@ -319,67 +319,89 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
   }
 
   const renderPieChart = () => {
-    const chartData = data.slice(0, 8).map((row, index) => {
+    const chartData = data.map((row, index) => {
       const keys = Object.keys(row)
       return {
         name: row[keys[0]] || `Item ${index + 1}`,
         value: Number(row[keys[1]]) || 0
       }
-    })
+    }).filter(item => item.value > 0) // Solo mostrar datos con valores positivos
+
+    // Si no hay datos válidos, mostrar mensaje
+    if (chartData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          No hay datos para mostrar
+        </div>
+      )
+    }
 
     // Paleta de colores atractivos para el gráfico circular
     const pieColors = [
-      'hsl(217, 91%, 60%)', // Azul vibrante
-      'hsl(142, 76%, 36%)', // Verde esmeralda
-      'hsl(45, 93%, 47%)',  // Amarillo dorado
-      'hsl(271, 81%, 56%)', // Púrpura
-      'hsl(346, 87%, 43%)', // Rojo carmesí
-      'hsl(24, 94%, 50%)',  // Naranja vibrante
-      'hsl(195, 85%, 41%)', // Cian
-      'hsl(291, 64%, 42%)'  // Magenta
+      '#3B82F6', // Azul
+      '#10B981', // Verde
+      '#F59E0B', // Amarillo
+      '#8B5CF6', // Púrpura
+      '#EF4444', // Rojo
+      '#F97316', // Naranja
+      '#06B6D4', // Cian
+      '#EC4899'  // Rosa
     ]
 
     return (
-      <ResponsiveContainer width="100%" height={250}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            innerRadius={40}
-            outerRadius={80}
-            paddingAngle={2}
-            dataKey="value"
-          >
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-            ))}
-          </Pie>
-          <Tooltip 
-            contentStyle={{
-              backgroundColor: 'hsl(var(--popover))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px',
-              color: 'white'
-            }}
-            labelStyle={{
-              color: 'white'
-            }}
-            itemStyle={{
-              color: 'white'
-            }}
-            formatter={(value, name) => [`${value}`, name]}
-          />
-          <Legend 
-            verticalAlign="bottom" 
-            height={36}
-            wrapperStyle={{
-              color: 'hsl(var(--foreground))',
-              fontSize: '12px'
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+      <div style={{ width: '100%', height: '280px' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="45%"
+              innerRadius={45}
+              outerRadius={85}
+              paddingAngle={3}
+              dataKey="value"
+              stroke="none"
+            >
+              {chartData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={pieColors[index % pieColors.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '12px'
+              }}
+              labelStyle={{
+                color: 'white'
+              }}
+              itemStyle={{
+                color: 'white'
+              }}
+              formatter={(value, name) => {
+                const total = chartData.reduce((sum, item) => sum + Number(item.value), 0)
+                const percentage = ((Number(value) / total) * 100).toFixed(1)
+                return [`${value} (${percentage}%)`, name]
+              }}
+            />
+            <Legend 
+              verticalAlign="bottom" 
+              height={36}
+              wrapperStyle={{
+                color: 'hsl(var(--foreground))',
+                fontSize: '11px',
+                paddingTop: '10px'
+              }}
+              iconType="circle"
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     )
   }
 
