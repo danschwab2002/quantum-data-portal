@@ -1,8 +1,10 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { Button } from "@/components/ui/button"
-import { Search, Bell, User, LogOut } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Search, Bell, User, LogOut, Settings, LifeBuoy } from "lucide-react"
 import { useAuth } from "@/components/auth/AuthProvider"
+import { useNavigate } from "react-router-dom"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -10,6 +12,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth()
+  const navigate = useNavigate()
   
   return (
     <SidebarProvider>
@@ -36,19 +39,45 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 <Bell className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <User className="w-4 h-4" />
-              </Button>
+              
               {user && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={signOut}
-                  title="Cerrar sesión"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                      <User className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-popover border border-border">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario'}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/settings/profile')} className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Mi Perfil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configuración</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <LifeBuoy className="mr-2 h-4 w-4" />
+                      <span>Ayuda y Documentación</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Cerrar Sesión</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </header>
