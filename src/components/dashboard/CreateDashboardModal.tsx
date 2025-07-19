@@ -54,7 +54,7 @@ export function CreateDashboardModal() {
     if (!name.trim()) {
       toast({
         title: "Error",
-        description: "El nombre del dashboard es requerido",
+        description: "Dashboard name is required",
         variant: "destructive",
       })
       return
@@ -68,7 +68,7 @@ export function CreateDashboardModal() {
       if (!user) {
         toast({
           title: "Error",
-          description: "Debes estar autenticado para crear un dashboard",
+          description: "You must be authenticated to create a dashboard",
           variant: "destructive",
         })
         return
@@ -88,7 +88,7 @@ export function CreateDashboardModal() {
         throw error
       }
 
-      // Si hay una colección seleccionada, agregar el dashboard a la colección
+      // If a collection is selected, add the dashboard to the collection
       if (selectedCollection && selectedCollection !== "none" && data) {
         const { error: collectionError } = await supabase
           .from('collection_dashboards')
@@ -99,22 +99,22 @@ export function CreateDashboardModal() {
 
         if (collectionError) {
           console.error('Error adding dashboard to collection:', collectionError)
-          // Solo mostrar warning, el dashboard ya se creó
+          // Only show warning, the dashboard was already created
           toast({
-            title: "Dashboard creado",
-            description: "El dashboard se creó pero no se pudo agregar a la colección",
+            title: "Dashboard created",
+            description: "The dashboard was created but could not be added to the collection",
             variant: "destructive"
           })
         } else {
           toast({
-            title: "Dashboard creado",
-            description: "Tu dashboard ha sido creado y agregado a la colección exitosamente",
+            title: "Dashboard created",
+            description: "Your dashboard has been created and added to the collection successfully",
           })
         }
       } else {
         toast({
-          title: "Dashboard creado",
-          description: "Tu dashboard ha sido creado exitosamente",
+          title: "Dashboard created",
+          description: "Your dashboard has been created successfully",
         })
       }
 
@@ -129,7 +129,7 @@ export function CreateDashboardModal() {
       console.error('Error creating dashboard:', error)
       toast({
         title: "Error",
-        description: "Hubo un error al crear el dashboard",
+        description: "There was an error creating the dashboard",
         variant: "destructive",
       })
     } finally {
@@ -146,44 +146,44 @@ export function CreateDashboardModal() {
       </DialogTrigger>
       <DialogContent className="bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Crear Nuevo Dashboard</DialogTitle>
+          <DialogTitle className="text-foreground">Create New Dashboard</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <Label htmlFor="dashboard-name" className="text-foreground">
-              Nombre del Dashboard
+              Dashboard Name
             </Label>
             <Input
               id="dashboard-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Mi Dashboard"
+              placeholder="My Dashboard"
               className="mt-1"
             />
           </div>
           <div>
             <Label htmlFor="dashboard-description" className="text-foreground">
-              Descripción (opcional)
+              Description (optional)
             </Label>
             <Textarea
               id="dashboard-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción del dashboard..."
+              placeholder="Dashboard description..."
               className="mt-1"
               rows={3}
             />
           </div>
           <div>
             <Label htmlFor="collection" className="text-foreground">
-              Colección (opcional)
+              Collection (optional)
             </Label>
             <Select value={selectedCollection} onValueChange={setSelectedCollection}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Selecciona una colección" />
+                <SelectValue placeholder="Select a collection" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Ninguna colección</SelectItem>
+                <SelectItem value="none">No collection</SelectItem>
                 {collections.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     <div className="flex items-center gap-2">
@@ -201,13 +201,13 @@ export function CreateDashboardModal() {
               onClick={() => setIsOpen(false)}
               disabled={isCreating}
             >
-              Cancelar
+              Cancel
             </Button>
             <Button 
               onClick={handleCreateDashboard} 
               disabled={isCreating}
             >
-              {isCreating ? "Creando..." : "Crear Dashboard"}
+              {isCreating ? "Creating..." : "Create Dashboard"}
             </Button>
           </div>
         </div>
