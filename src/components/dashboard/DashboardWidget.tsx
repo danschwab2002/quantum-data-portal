@@ -212,23 +212,13 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
     
     // Convert to percentage format - if value is between 0-1, multiply by 100
     const percentageValue = numericValue <= 1 ? numericValue * 100 : numericValue
-    
-    const changePercentage = Math.random() * 20 - 5 // Mock percentage change
-    const isPositive = changePercentage >= 0
 
     return (
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-between">
-          <Percent className="w-5 h-5 text-primary" />
-          <div className={`flex items-center gap-1 text-sm ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-            {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-            {Math.abs(changePercentage).toFixed(1)}%
-          </div>
-        </div>
-        <div className="text-3xl font-bold text-foreground">
+      <div className="flex flex-col items-center justify-center h-full min-h-[120px]">
+        <div className="text-4xl font-bold text-foreground">
           {percentageValue.toFixed(1)}%
         </div>
-        <div className="text-sm text-muted-foreground">Este mes</div>
+        <div className="text-sm text-muted-foreground mt-2">Este mes</div>
       </div>
     )
   }
