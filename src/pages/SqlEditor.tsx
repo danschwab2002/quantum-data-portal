@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -8,11 +9,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Play, Save, Database, Clock, CheckCircle, AlertCircle } from "lucide-react"
+import { Play, Save, Database, Clock, CheckCircle, AlertCircle, FolderOpen } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
+interface Collection {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 const SqlEditor = () => {
+  const [searchParams] = useSearchParams();
   const { toast } = useToast()
   
   const [query, setQuery] = useState(`-- Sample query from your analytics data
@@ -27,7 +35,44 @@ WHERE event_type = 'connection_message_sent';`)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [questionName, setQuestionName] = useState("")
   const [visualizationType, setVisualizationType] = useState("")
+  const [selectedCollection, setSelectedCollection] = useState<string>("")
+  const [collections, setCollections] = useState<Collection[]>([])
   const [isSaving, setIsSaving] = useState(false)
+
+  // Get collection from URL parameter
+  const collectionFromUrl = searchParams.get('collection')
+
+  useEffect(() => {
+    fetchCollections()
+  }, [])
+
+  useEffect(() => {
+    // Pre-select collection from URL if available
+    if (collectionFromUrl && collections.length > 0) {
+      const collectionExists = collections.find(c => c.id === collectionFromUrl)
+      if (collectionExists) {
+        setSelectedCollection(collectionFromUrl)
+      }
+    }
+  }, [collectionFromUrl, collections])
+
+  const fetchCollections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('collections')
+        .select('id, name, description')
+        .order('name')
+
+      if (error) {
+        console.error('Error fetching collections:', error)
+        return
+      }
+
+      setCollections(data || [])
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
 
   const executeQuery = async () => {
     setIsExecuting(true)
@@ -130,32 +175,62 @@ WHERE event_type = 'connection_message_sent';`)
 
     try {
       // Insertar la pregunta en la base de datos
-      const { error } = await supabase
+      const { data: questionData, error: questionError } = await supabase
         .from('questions')
         .insert({
           name: questionName.trim(),
           query: query.trim(),
           visualization_type: visualizationType
         })
+        .select()
+        .single()
 
-      if (error) {
-        console.error('Error saving question:', error)
+      if (questionError) {
+        console.error('Error saving question:', questionError)
         toast({
           title: "Error al guardar",
-          description: error.message,
+          description: questionError.message,
           variant: "destructive"
         })
+        return
+      }
+
+      // Si hay una colección seleccionada, agregar la pregunta a la colección
+      if (selectedCollection && questionData) {
+        const { error: collectionError } = await supabase
+          .from('collection_questions')
+          .insert({
+            collection_id: selectedCollection,
+            question_id: questionData.id
+          })
+
+        if (collectionError) {
+          console.error('Error adding question to collection:', collectionError)
+          // Solo mostrar warning, la pregunta ya se guardó
+          toast({
+            title: "Pregunta guardada",
+            description: "La pregunta se guardó pero no se pudo agregar a la colección",
+            variant: "destructive"
+          })
+        } else {
+          toast({
+            title: "Pregunta guardada con éxito",
+            description: `"${questionName}" se ha guardado y agregado a la colección`,
+          })
+        }
       } else {
-        // Éxito: cerrar modal y mostrar notificación
-        setIsModalOpen(false)
-        setQuestionName("")
-        setVisualizationType("")
-        
         toast({
           title: "Pregunta guardada con éxito",
           description: `"${questionName}" se ha guardado correctamente`,
         })
       }
+
+      // Éxito: cerrar modal y limpiar campos
+      setIsModalOpen(false)
+      setQuestionName("")
+      setVisualizationType("")
+      setSelectedCollection("")
+      
     } catch (err: any) {
       console.error('Unexpected error saving question:', err)
       toast({
@@ -168,13 +243,23 @@ WHERE event_type = 'connection_message_sent';`)
     }
   }
 
+  const selectedCollectionName = collections.find(c => c.id === selectedCollection)?.name
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">SQL Editor</h1>
-          <p className="text-muted-foreground">Write and execute SQL queries against your database</p>
+          <div className="flex items-center gap-2">
+            <p className="text-muted-foreground">Write and execute SQL queries against your database</p>
+            {selectedCollectionName && (
+              <Badge variant="outline" className="gap-1">
+                <FolderOpen className="h-3 w-3" />
+                {selectedCollectionName}
+              </Badge>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center gap-2">
@@ -225,6 +310,25 @@ WHERE event_type = 'connection_message_sent';`)
                               <SelectItem value="tabla">Tabla</SelectItem>
                               <SelectItem value="grafico-barras">Gráfico de Barras</SelectItem>
                               <SelectItem value="grafico-lineas">Gráfico de Líneas</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="collection">Colección (opcional)</Label>
+                          <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona una colección" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">Ninguna colección</SelectItem>
+                              {collections.map((collection) => (
+                                <SelectItem key={collection.id} value={collection.id}>
+                                  <div className="flex items-center gap-2">
+                                    <FolderOpen className="h-4 w-4" />
+                                    {collection.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>

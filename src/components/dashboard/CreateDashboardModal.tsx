@@ -1,21 +1,54 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, FolderOpen } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+
+interface Collection {
+  id: string;
+  name: string;
+  description: string | null;
+}
 
 export function CreateDashboardModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
+  const [selectedCollection, setSelectedCollection] = useState<string>("")
+  const [collections, setCollections] = useState<Collection[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCollections()
+    }
+  }, [isOpen])
+
+  const fetchCollections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('collections')
+        .select('id, name, description')
+        .order('name')
+
+      if (error) {
+        console.error('Error fetching collections:', error)
+        return
+      }
+
+      setCollections(data || [])
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
 
   const handleCreateDashboard = async () => {
     if (!name.trim()) {
@@ -55,14 +88,40 @@ export function CreateDashboardModal() {
         throw error
       }
 
-      toast({
-        title: "Dashboard creado",
-        description: "Tu dashboard ha sido creado exitosamente",
-      })
+      // Si hay una colección seleccionada, agregar el dashboard a la colección
+      if (selectedCollection && data) {
+        const { error: collectionError } = await supabase
+          .from('collection_dashboards')
+          .insert({
+            collection_id: selectedCollection,
+            dashboard_id: data.id
+          })
+
+        if (collectionError) {
+          console.error('Error adding dashboard to collection:', collectionError)
+          // Solo mostrar warning, el dashboard ya se creó
+          toast({
+            title: "Dashboard creado",
+            description: "El dashboard se creó pero no se pudo agregar a la colección",
+            variant: "destructive"
+          })
+        } else {
+          toast({
+            title: "Dashboard creado",
+            description: "Tu dashboard ha sido creado y agregado a la colección exitosamente",
+          })
+        }
+      } else {
+        toast({
+          title: "Dashboard creado",
+          description: "Tu dashboard ha sido creado exitosamente",
+        })
+      }
 
       setIsOpen(false)
       setName("")
       setDescription("")
+      setSelectedCollection("")
       
       // Navigate to the new dashboard
       navigate(`/dashboard/${data.id}`)
@@ -114,6 +173,27 @@ export function CreateDashboardModal() {
               className="mt-1"
               rows={3}
             />
+          </div>
+          <div>
+            <Label htmlFor="collection" className="text-foreground">
+              Colección (opcional)
+            </Label>
+            <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Selecciona una colección" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Ninguna colección</SelectItem>
+                {collections.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4" />
+                      {collection.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end gap-2">
             <Button 
