@@ -1,181 +1,132 @@
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, TrendingUp, Users, Target, DollarSign } from "lucide-react"
-import { MetricCard } from "@/components/dashboard/MetricCard"
-import { ChartWidget } from "@/components/dashboard/ChartWidget"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Plus, LayoutDashboard, Calendar, Clock } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
+import { CreateDashboardModal } from "@/components/dashboard/CreateDashboardModal"
 
-const Dashboard = () => {
+interface Dashboard {
+  id: string
+  name: string
+  description: string | null
+  user_id: string
+  created_at: string
+}
+
+export default function Dashboard() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState("overview")
+  const [dashboards, setDashboards] = useState<Dashboard[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { toast } = useToast()
 
-  const metrics = [
-    {
-      title: "Total Leads",
-      value: "1,234",
-      change: "+12.5%",
-      trend: "up" as const,
-      icon: Users,
-      description: "This month"
-    },
-    {
-      title: "Appointments Set",
-      value: "847",
-      change: "+8.2%",
-      trend: "up" as const,
-      icon: Target,
-      description: "This month"
-    },
-    {
-      title: "Conversion Rate",
-      value: "68.7%",
-      change: "-2.1%",
-      trend: "down" as const,
-      icon: TrendingUp,
-      description: "This month"
-    },
-    {
-      title: "Revenue",
-      value: "$24,680",
-      change: "+15.3%",
-      trend: "up" as const,
-      icon: DollarSign,
-      description: "This month"
-    },
-  ]
+  const fetchDashboards = async () => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('dashboards')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-  const chartData = [
-    { name: "Jan", leads: 850, appointments: 580, revenue: 18500 },
-    { name: "Feb", leads: 920, appointments: 640, revenue: 20200 },
-    { name: "Mar", leads: 1050, appointments: 720, revenue: 22800 },
-    { name: "Apr", leads: 980, appointments: 690, revenue: 21600 },
-    { name: "May", leads: 1150, appointments: 810, revenue: 25400 },
-    { name: "Jun", leads: 1234, appointments: 847, revenue: 24680 },
-  ]
+      if (error) {
+        throw error
+      }
+
+      setDashboards(data || [])
+    } catch (error) {
+      console.error('Error fetching dashboards:', error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los dashboards",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboards()
+  }, [])
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-muted-foreground">Cargando dashboards...</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your appointment setter performance</p>
+          <h1 className="text-3xl font-bold text-foreground">Dashboards</h1>
+          <p className="text-muted-foreground mt-1">
+            Crea y gestiona tus dashboards personalizados
+          </p>
         </div>
-        <Button 
-          onClick={() => navigate('/sql-editor')}
-          className="bg-primary hover:bg-primary/90 shadow-glow"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Widget
-        </Button>
+        <CreateDashboardModal />
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 max-w-md">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="leads">Leads</TabsTrigger>
-          <TabsTrigger value="ai-performance">AI Performance</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {metrics.map((metric, index) => (
-              <MetricCard key={index} {...metric} />
-            ))}
+      {dashboards.length === 0 ? (
+        <div className="flex items-center justify-center min-h-96 border-2 border-dashed border-border rounded-lg">
+          <div className="text-center max-w-md">
+            <LayoutDashboard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No tienes dashboards
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Crea tu primer dashboard personalizado para comenzar a visualizar tus datos.
+            </p>
+            <CreateDashboardModal />
           </div>
-
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartWidget
-              title="Leads vs Appointments"
-              type="line"
-              data={chartData}
-              dataKeys={["leads", "appointments"]}
-              colors={["hsl(var(--chart-1))", "hsl(var(--chart-2))"]}
-            />
-            <ChartWidget
-              title="Monthly Revenue"
-              type="bar"
-              data={chartData}
-              dataKeys={["revenue"]}
-              colors={["hsl(var(--chart-1))"]}
-            />
-          </div>
-
-          {/* Performance Table */}
-          <Card className="bg-card border-border shadow-card">
-            <CardHeader>
-              <CardTitle className="text-foreground">Recent Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 text-muted-foreground font-medium">Date</th>
-                      <th className="text-left py-3 text-muted-foreground font-medium">Leads</th>
-                      <th className="text-left py-3 text-muted-foreground font-medium">Appointments</th>
-                      <th className="text-left py-3 text-muted-foreground font-medium">Conversion</th>
-                      <th className="text-left py-3 text-muted-foreground font-medium">Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {chartData.slice(-5).map((row, index) => (
-                      <tr key={index} className="border-b border-border/50">
-                        <td className="py-3 text-foreground">{row.name} 2024</td>
-                        <td className="py-3 text-foreground">{row.leads}</td>
-                        <td className="py-3 text-foreground">{row.appointments}</td>
-                        <td className="py-3 text-foreground">{((row.appointments / row.leads) * 100).toFixed(1)}%</td>
-                        <td className="py-3 text-foreground">${row.revenue.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="leads">
-          <Card className="bg-card border-border shadow-card">
-            <CardHeader>
-              <CardTitle>Lead Generation Metrics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Lead-specific analytics will be displayed here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ai-performance">
-          <Card className="bg-card border-border shadow-card">
-            <CardHeader>
-              <CardTitle>AI Performance Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">AI performance metrics will be displayed here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="revenue">
-          <Card className="bg-card border-border shadow-card">
-            <CardHeader>
-              <CardTitle>Revenue Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Revenue analytics will be displayed here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {dashboards.map((dashboard) => (
+            <Card 
+              key={dashboard.id}
+              className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer group"
+              onClick={() => navigate(`/dashboard/${dashboard.id}`)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <LayoutDashboard className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-foreground group-hover:text-primary transition-colors">
+                    {dashboard.name}
+                  </CardTitle>
+                </div>
+                {dashboard.description && (
+                  <CardDescription className="text-muted-foreground">
+                    {dashboard.description}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span>Creado el {formatDate(dashboard.created_at)}</span>
+                </div>
+                <div className="mt-4">
+                  <Button size="sm" className="w-full">
+                    Abrir Dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
-
-export default Dashboard

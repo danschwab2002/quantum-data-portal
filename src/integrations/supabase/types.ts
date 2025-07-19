@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      dashboard_widgets: {
+        Row: {
+          created_at: string
+          dashboard_id: string
+          grid_position: Json | null
+          id: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_id: string
+          grid_position?: Json | null
+          id?: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_id?: string
+          grid_position?: Json | null
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_widgets_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "dashboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_widgets_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dashboards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       n8n_chat_histories: {
         Row: {
           id: number

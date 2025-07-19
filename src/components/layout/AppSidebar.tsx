@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { BarChart3, Database, FolderOpen, Plus, Settings, FileQuestion, LayoutDashboard, Home, ChevronRight, ChevronDown } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
+import { CreateDashboardModal } from "@/components/dashboard/CreateDashboardModal";
 const navigationItems = [{
   title: "Dashboard",
   url: "/",
@@ -29,16 +31,14 @@ const navigationItems = [{
   url: "/settings",
   icon: Settings
 }];
-const collections = [{
-  name: "Sales Funnel",
-  items: ["Lead Generation", "Appointment Setting", "Conversion Rate"]
-}, {
-  name: "AI Performance",
-  items: ["Response Quality", "Call Analytics", "Success Rate"]
-}, {
-  name: "Business Metrics",
-  items: ["Revenue", "ROI", "Customer Acquisition"]
-}];
+interface Dashboard {
+  id: string;
+  name: string;
+  description: string | null;
+  user_id: string;
+  created_at: string;
+}
+
 export function AppSidebar() {
   const {
     state
@@ -46,7 +46,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
-  const [expandedCollections, setExpandedCollections] = useState<string[]>(["Sales Funnel"]);
+  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const collapsed = state === "collapsed";
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({
@@ -54,9 +54,28 @@ export function AppSidebar() {
   }: {
     isActive: boolean;
   }) => isActive ? "bg-primary text-primary-foreground font-medium shadow-glow" : "hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-smooth";
-  const toggleCollection = (name: string) => {
-    setExpandedCollections(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
+
+  const fetchDashboards = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dashboards')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching dashboards:', error);
+        return;
+      }
+
+      setDashboards(data || []);
+    } catch (error) {
+      console.error('Error fetching dashboards:', error);
+    }
   };
+
+  useEffect(() => {
+    fetchDashboards();
+  }, []);
   return <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
       <SidebarContent className="bg-sidebar border-r border-sidebar-border">
         {/* Header */}
@@ -88,28 +107,33 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Collections */}
+        {/* Dashboards */}
         {!collapsed && <SidebarGroup>
-            <SidebarGroupLabel className="text-muted-foreground text-xs uppercase tracking-wider mb-3">
-              Collections
-            </SidebarGroupLabel>
+            <div className="flex items-center justify-between px-3 mb-3">
+              <SidebarGroupLabel className="text-muted-foreground text-xs uppercase tracking-wider">
+                Dashboards
+              </SidebarGroupLabel>
+              <CreateDashboardModal />
+            </div>
             <SidebarGroupContent>
-              <div className="space-y-2">
-                {collections.map(collection => <Collapsible key={collection.name} open={expandedCollections.includes(collection.name)} onOpenChange={() => toggleCollection(collection.name)}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-start h-8 px-2 text-sm font-normal hover:bg-secondary/80">
-                        {expandedCollections.includes(collection.name) ? <ChevronDown className="w-3 h-3 mr-2" /> : <ChevronRight className="w-3 h-3 mr-2" />}
-                        <FolderOpen className="w-3 h-3 mr-2" />
-                        {collection.name}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pl-6 space-y-1">
-                      {collection.items.map(item => <Button key={item} variant="ghost" className="w-full justify-start h-7 px-2 text-xs font-normal text-muted-foreground hover:text-foreground hover:bg-secondary/50">
-                          <FileQuestion className="w-3 h-3 mr-2" />
-                          {item}
-                        </Button>)}
-                    </CollapsibleContent>
-                  </Collapsible>)}
+              <div className="space-y-1">
+                {dashboards.length === 0 ? (
+                  <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                    No tienes dashboards
+                  </div>
+                ) : (
+                  dashboards.map(dashboard => (
+                    <Button 
+                      key={dashboard.id} 
+                      variant="ghost" 
+                      className="w-full justify-start h-8 px-3 text-sm font-normal text-white hover:text-white hover:bg-white/10 hover:scale-105 transition-all"
+                      onClick={() => navigate(`/dashboard/${dashboard.id}`)}
+                    >
+                      <LayoutDashboard className="w-3 h-3 mr-2" />
+                      {dashboard.name}
+                    </Button>
+                  ))
+                )}
               </div>
             </SidebarGroupContent>
           </SidebarGroup>}

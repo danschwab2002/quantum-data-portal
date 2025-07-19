@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
+import CustomDashboard from "./pages/CustomDashboard";
 import SqlEditor from "./pages/SqlEditor";
 import Collections from "./pages/Collections";
 import DatabaseConnection from "./pages/DatabaseConnection";
@@ -21,6 +22,7 @@ const App = () => (
         <AppLayout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard/:dashboardId" element={<CustomDashboard />} />
             <Route path="/sql-editor" element={<SqlEditor />} />
             <Route path="/collections" element={<Collections />} />
             <Route path="/database" element={<DatabaseConnection />} />
