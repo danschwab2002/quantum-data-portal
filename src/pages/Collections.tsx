@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { FolderOpen, Plus, FileQuestion, MoreHorizontal, Search } from "lucide-react"
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 const Collections = () => {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState("")
 
   const collections = [
@@ -172,7 +174,11 @@ const Collections = () => {
               <CardTitle className="text-sm text-foreground">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start text-sm h-9">
+              <Button 
+                onClick={() => navigate('/sql-editor')}
+                variant="outline" 
+                className="w-full justify-start text-sm h-9"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 New Question
               </Button>

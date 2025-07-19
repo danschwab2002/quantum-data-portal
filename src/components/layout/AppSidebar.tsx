@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import {
   BarChart3,
   Database,
@@ -53,6 +53,7 @@ const collections = [
 
 export function AppSidebar() {
   const { state } = useSidebar()
+  const navigate = useNavigate()
   const location = useLocation()
   const currentPath = location.pathname
   const [expandedCollections, setExpandedCollections] = useState<string[]>(["Sales Funnel"])
@@ -158,7 +159,10 @@ export function AppSidebar() {
         {/* Quick Actions */}
         {!collapsed && (
           <div className="mt-auto p-4 border-t border-sidebar-border">
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow">
+            <Button 
+              onClick={() => navigate('/sql-editor')}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow"
+            >
               <Plus className="w-4 h-4 mr-2" />
               New Question
             </Button>

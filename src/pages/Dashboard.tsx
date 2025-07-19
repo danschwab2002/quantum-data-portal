@@ -2,11 +2,13 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useNavigate } from "react-router-dom"
 import { Plus, TrendingUp, Users, Target, DollarSign } from "lucide-react"
 import { MetricCard } from "@/components/dashboard/MetricCard"
 import { ChartWidget } from "@/components/dashboard/ChartWidget"
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("overview")
 
   const metrics = [
@@ -61,7 +63,10 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Overview of your appointment setter performance</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 shadow-glow">
+        <Button 
+          onClick={() => navigate('/sql-editor')}
+          className="bg-primary hover:bg-primary/90 shadow-glow"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Widget
         </Button>
