@@ -1,20 +1,29 @@
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { Button } from "@/components/ui/button"
 import { Search, Bell, User, LogOut } from "lucide-react"
 import { useAuth } from "@/components/auth/AuthProvider"
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface AppLayoutProps {
   children: React.ReactNode
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+function AppLayoutContent({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth()
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
   
   return (
-    <SidebarProvider>
+    <div className="min-h-screen w-full flex bg-background">
       <AppSidebar />
-      <SidebarInset>
+      
+      {/* Main content area with proper margin */}
+      <div 
+        className={`flex-1 flex flex-col transition-all duration-200 ease-linear ${
+          isCollapsed ? 'ml-16' : 'ml-72'
+        }`}
+      >
         {/* Header */}
         <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 sticky top-0 z-40">
           <div className="flex items-center gap-4">
@@ -55,7 +64,15 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
-      </SidebarInset>
+      </div>
+    </div>
+  )
+}
+
+export function AppLayout({ children }: AppLayoutProps) {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   )
 }
