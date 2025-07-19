@@ -123,7 +123,7 @@ export function AppSidebar() {
               <div className="space-y-1">
                 {dashboards.length === 0 ? (
                   <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-                    No tienes dashboards
+                    No dashboards
                   </div>
                 ) : (
                   dashboards.map(dashboard => (
