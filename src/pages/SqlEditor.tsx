@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Play, Save, Database, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -17,6 +21,9 @@ WHERE event_type = 'connection_message_sent';`)
   const [isExecuting, setIsExecuting] = useState(false)
   const [queryResult, setQueryResult] = useState<any>(null)
   const [queryError, setQueryError] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [questionName, setQuestionName] = useState("")
+  const [visualizationType, setVisualizationType] = useState("")
 
   const executeQuery = async () => {
     setIsExecuting(true)
@@ -111,10 +118,59 @@ WHERE event_type = 'connection_message_sent';`)
               <div className="flex items-center justify-between">
                 <CardTitle className="text-foreground">Query Editor</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Save className="w-4 h-4 mr-2" />
+                        Save
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Guardar Pregunta</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="question-name">Nombre de la Pregunta</Label>
+                          <Input
+                            id="question-name"
+                            value={questionName}
+                            onChange={(e) => setQuestionName(e.target.value)}
+                            placeholder="Ej: Mensajes de Conexión Enviados (Total)"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="visualization-type">Tipo de Visualización</Label>
+                          <Select value={visualizationType} onValueChange={setVisualizationType}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="numero">Número</SelectItem>
+                              <SelectItem value="tabla">Tabla</SelectItem>
+                              <SelectItem value="grafico-barras">Gráfico de Barras</SelectItem>
+                              <SelectItem value="grafico-lineas">Gráfico de Líneas</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                            Cancelar
+                          </Button>
+                          <Button 
+                            onClick={() => {
+                              // TODO: Implementar lógica de guardado
+                              console.log("Guardar:", { questionName, visualizationType, query })
+                              setIsModalOpen(false)
+                            }}
+                            disabled={!questionName || !visualizationType}
+                          >
+                            Guardar
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   <Button 
                     onClick={executeQuery}
                     disabled={isExecuting}
