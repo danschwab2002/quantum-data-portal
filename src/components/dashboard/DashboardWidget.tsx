@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X, PieChart as PieChartIcon } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel, LabelList } from 'recharts'
+import { TrendingUp, TrendingDown, BarChart3, LineChart as LineChartIcon, Hash, Table as TableIcon, Pencil, Trash2, Check, X, PieChart as PieChartIcon, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -173,6 +173,8 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         return renderLineChart()
       case 'grafico-circular':
         return renderPieChart()
+      case 'grafico-funnel':
+        return renderFunnelChart()
       default:
         return renderTableWidget()
     }
@@ -367,6 +369,45 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
     )
   }
 
+  const renderFunnelChart = () => {
+    const chartData = data.map((row, index) => {
+      const keys = Object.keys(row)
+      return {
+        name: row[keys[0]] || `Stage ${index + 1}`,
+        value: Number(row[keys[1]]) || 0
+      }
+    })
+
+    return (
+      <ResponsiveContainer width="100%" height={200}>
+        <FunnelChart>
+          <Funnel
+            dataKey="value"
+            data={chartData}
+            isAnimationActive
+            fill="hsl(var(--primary))"
+          >
+            <LabelList 
+              position="center" 
+              fill="white" 
+              stroke="none" 
+              fontSize={12}
+              formatter={(value, entry) => `${entry.name}: ${value}`}
+            />
+          </Funnel>
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px'
+            }}
+            formatter={(value) => [`${value}`, 'Valor']}
+          />
+        </FunnelChart>
+      </ResponsiveContainer>
+    )
+  }
+
   const getIcon = () => {
     if (!questionData?.visualization_type) return <BarChart3 className="w-4 h-4" />
     
@@ -381,6 +422,8 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         return <LineChartIcon className="w-4 h-4" />
       case 'grafico-circular':
         return <PieChartIcon className="w-4 h-4" />
+      case 'grafico-funnel':
+        return <Filter className="w-4 h-4" />
       default:
         return <BarChart3 className="w-4 h-4" />
     }
