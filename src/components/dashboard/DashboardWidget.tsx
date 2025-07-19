@@ -392,7 +392,7 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
               fill="white" 
               stroke="none" 
               fontSize={12}
-              formatter={(value, entry) => `${entry.name}: ${value}`}
+              formatter={(value, entry) => entry ? `${entry.name}: ${value}` : `${value}`}
             />
           </Funnel>
           <Tooltip 
