@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      collection_dashboards: {
+        Row: {
+          collection_id: string
+          created_at: string
+          dashboard_id: string
+          id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          dashboard_id: string
+          id?: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          dashboard_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      collection_questions: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: []
+      }
+      collections: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dashboard_sections: {
         Row: {
           created_at: string
