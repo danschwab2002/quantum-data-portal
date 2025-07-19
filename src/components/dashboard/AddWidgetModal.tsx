@@ -156,39 +156,39 @@ export function AddWidgetModal({ dashboardId, sectionId, onClose, onWidgetAdded 
               </div>
             </div>
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               {questions.map((question) => (
-                <Card 
+                <div 
                   key={question.id}
-                  className="bg-muted/50 border-border hover:bg-muted/70 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-md border bg-card hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer group"
                   onClick={() => handleAddWidget(question.id)}
                 >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm text-foreground flex items-center gap-2">
-                        {getVisualizationIcon(question.visualization_type)}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex-shrink-0 text-muted-foreground">
+                      {getVisualizationIcon(question.visualization_type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">
                         {question.name}
-                      </CardTitle>
-                      <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                      </div>
+                      <div className="text-xs text-muted-foreground">
                         {question.visualization_type}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <CardDescription className="text-xs font-mono text-muted-foreground truncate">
-                      {question.query}
-                    </CardDescription>
-                    <div className="mt-2">
-                      <Button
-                        size="sm"
-                        disabled={isAdding === question.id}
-                        className="w-full"
-                      >
-                        {isAdding === question.id ? "Agregando..." : "Agregar al Dashboard"}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isAdding === question.id}
+                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleAddWidget(question.id)
+                    }}
+                  >
+                    {isAdding === question.id ? "Adding..." : "Add"}
+                  </Button>
+                </div>
               ))}
             </div>
           )}
