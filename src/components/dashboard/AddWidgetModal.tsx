@@ -120,10 +120,8 @@ export function AddWidgetModal({ dashboardId, sectionId, onClose, onWidgetAdded 
   }
 
   useEffect(() => {
-    if (isOpen) {
-      fetchQuestions()
-    }
-  }, [isOpen])
+    fetchQuestions()
+  }, [])
 
   // If onClose is provided, this is controlled externally
   const isControlled = !!onClose
