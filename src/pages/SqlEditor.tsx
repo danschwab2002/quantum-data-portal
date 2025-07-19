@@ -49,25 +49,34 @@ ORDER BY total_events DESC;`)
   const executeBasicQuery = async () => {
     try {
       const lowerQuery = query.toLowerCase().trim()
+      console.log('Executing query:', query)
+      console.log('Lower query:', lowerQuery)
       
       // Handle COUNT queries
       if (lowerQuery.includes('count(') && lowerQuery.includes('setting_analytics')) {
         let supabaseQuery = supabase.from('setting_analytics').select('*', { count: 'exact', head: true })
         
-        // Parse WHERE conditions
+        // Parse WHERE conditions more carefully
         if (lowerQuery.includes('where') && lowerQuery.includes('event_type')) {
+          // Extract the value between quotes, handling both single and double quotes
           const eventTypeMatch = query.match(/event_type\s*=\s*['"](.*?)['"]/i)
+          console.log('Event type match:', eventTypeMatch)
           if (eventTypeMatch) {
-            supabaseQuery = supabaseQuery.eq('event_type', eventTypeMatch[1])
+            const eventType = eventTypeMatch[1]
+            console.log('Filtering by event_type:', eventType)
+            supabaseQuery = supabaseQuery.eq('event_type', eventType)
           }
         }
         
         const { count, error } = await supabaseQuery
+        console.log('Supabase response - count:', count, 'error:', error)
         
         if (error) {
+          console.error('Supabase error:', error)
           setQueryError(error.message)
           setQueryResult(null)
         } else {
+          console.log('Setting result with count:', count)
           setQueryResult({
             columns: ['count'],
             rows: [[count || 0]]
