@@ -2,10 +2,9 @@ import { useState, useEffect } from "react"
 import { useParams, Navigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Plus } from "lucide-react"
 import { DashboardSection } from "@/components/dashboard/DashboardSection"
 
@@ -216,53 +215,14 @@ export default function CustomDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{dashboard.name}</h1>
-          {dashboard.description && (
-            <p className="text-muted-foreground mt-1">{dashboard.description}</p>
-          )}
-        </div>
-        <Dialog open={showAddSection} onOpenChange={setShowAddSection}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Sección
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Crear Nueva Sección</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Nombre de la sección"
-                value={newSectionName}
-                onChange={(e) => setNewSectionName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddSection()
-                }}
-              />
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowAddSection(false)
-                    setNewSectionName("")
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={handleAddSection} disabled={!newSectionName.trim()}>
-                  Crear Sección
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground mb-2">{dashboard.name}</h1>
+        {dashboard.description && (
+          <p className="text-muted-foreground">{dashboard.description}</p>
+        )}
       </div>
 
-      {/* Sections Tabs */}
+      {/* Sections */}
       {sections.length === 0 ? (
         <div className="flex items-center justify-center min-h-96 border-2 border-dashed border-border rounded-lg">
           <div className="text-center">
@@ -279,27 +239,82 @@ export default function CustomDashboard() {
           </div>
         </div>
       ) : (
-        <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${sections.length}, 1fr)` }}>
+        <div className="space-y-4">
+          {/* Metabase-style Section Tabs */}
+          <div className="flex items-center space-x-1 border-b border-border pb-2">
             {sections.map((section) => (
-              <TabsTrigger key={section.id} value={section.id} className="flex-1">
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  activeSection === section.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
                 {section.name}
-              </TabsTrigger>
+              </button>
             ))}
-          </TabsList>
-          
+            
+            {/* Add Section Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAddSection(true)}
+              className="ml-2 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Active Section Content */}
           {sections.map((section) => (
-            <TabsContent key={section.id} value={section.id} className="mt-6">
-              <DashboardSection
-                section={section}
-                widgets={getWidgetsForSection(section.id)}
-                onSectionUpdate={handleSectionUpdate}
-                onWidgetUpdate={handleWidgetUpdate}
-              />
-            </TabsContent>
+            activeSection === section.id && (
+              <div key={section.id} className="animate-fade-in">
+                <DashboardSection
+                  section={section}
+                  widgets={getWidgetsForSection(section.id)}
+                  onSectionUpdate={handleSectionUpdate}
+                  onWidgetUpdate={handleWidgetUpdate}
+                />
+              </div>
+            )
           ))}
-        </Tabs>
+        </div>
       )}
+
+      {/* Add Section Modal */}
+      <Dialog open={showAddSection} onOpenChange={setShowAddSection}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crear Nueva Sección</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Nombre de la sección"
+              value={newSectionName}
+              onChange={(e) => setNewSectionName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAddSection()
+              }}
+            />
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddSection(false)
+                  setNewSectionName("")
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleAddSection} disabled={!newSectionName.trim()}>
+                Crear Sección
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
