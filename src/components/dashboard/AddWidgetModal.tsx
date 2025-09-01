@@ -103,6 +103,7 @@ export function AddWidgetModal({ dashboardId, sectionId, onClose, onWidgetAdded 
       const { data, error } = await supabase
         .from('dashboard_widgets')
         .insert({
+          id: crypto.randomUUID(),
           dashboard_id: dashboardId,
           question_id: questionId,
           section_id: targetSectionId
