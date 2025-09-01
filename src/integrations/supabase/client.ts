@@ -2,8 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://imcuuziargvldmdaqkvd.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltY3V1emlhcmd2bGRtZGFxa3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0Nzc4MjksImV4cCI6MjA1NTA1MzgyOX0.9DYV_Ksry7juYmvlac2UEJj7axon4zWya-wDLQi3drw";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://appsupabase.plexonai.com/";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.QfbDcYC6GmxN5-tc9PqRr-fR8ADIZM74Rb2fmm22xZg";
 
 // Validate required environment variables
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
