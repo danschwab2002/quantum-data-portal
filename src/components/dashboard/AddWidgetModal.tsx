@@ -75,29 +75,46 @@ export function AddWidgetModal({ dashboardId, sectionId, onClose, onWidgetAdded 
       let targetSectionId = sectionId
       
       if (!targetSectionId) {
-        const { data: sections } = await supabase
+        const { data: sections, error: sectionsError } = await supabase
           .from('dashboard_sections')
           .select('id')
           .eq('dashboard_id', dashboardId)
           .order('display_order')
           .limit(1)
         
+        if (sectionsError) {
+          console.error('Error fetching sections:', sectionsError)
+          throw new Error('No se pudo encontrar una sección para el dashboard')
+        }
+        
         if (sections && sections.length > 0) {
           targetSectionId = sections[0].id
+        } else {
+          throw new Error('No hay secciones disponibles en este dashboard')
         }
       }
 
-      const { error } = await supabase
+      console.log('Adding widget with:', {
+        dashboard_id: dashboardId,
+        question_id: questionId,
+        section_id: targetSectionId
+      })
+
+      const { data, error } = await supabase
         .from('dashboard_widgets')
         .insert({
           dashboard_id: dashboardId,
           question_id: questionId,
           section_id: targetSectionId
         })
+        .select()
 
       if (error) {
+        console.error('Supabase error details:', error)
         throw error
       }
+
+      console.log('Widget added successfully:', data)
 
       toast({
         title: "Widget agregado",
@@ -107,11 +124,12 @@ export function AddWidgetModal({ dashboardId, sectionId, onClose, onWidgetAdded 
       setIsOpen(false)
       if (onClose) onClose()
       onWidgetAdded()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding widget:', error)
+      const errorMessage = error?.message || error?.details || 'Error desconocido'
       toast({
         title: "Error",
-        description: "No se pudo agregar el widget",
+        description: `No se pudo agregar el widget: ${errorMessage}`,
         variant: "destructive",
       })
     } finally {
