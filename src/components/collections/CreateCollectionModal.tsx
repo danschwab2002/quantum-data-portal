@@ -47,6 +47,7 @@ export function CreateCollectionModal({ onCollectionCreated }: CreateCollectionM
       const { error } = await supabase
         .from('collections')
         .insert({
+          id: crypto.randomUUID(),
           name: name.trim(),
           description: description.trim() || null,
           user_id: user.id,
