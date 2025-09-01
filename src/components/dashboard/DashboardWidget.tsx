@@ -14,7 +14,7 @@ interface DashboardWidgetProps {
     name: string
     query: string
     visualization_type: string
-  }
+  } | null
   widget?: {
     id: string
     dashboard_id: string
@@ -27,7 +27,7 @@ interface DashboardWidgetProps {
       query: string
       visualization_type: string
       created_at: string
-    }
+    } | null
   }
   onUpdate?: () => void
 }
@@ -78,6 +78,11 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
 
     if (questionData?.query) {
       executeQuery()
+    } else if (!questionData) {
+      // Handle case where there's no question data
+      setIsLoading(false)
+      setError('No hay datos de pregunta disponibles')
+      setData([])
     }
   }, [questionData?.query])
 

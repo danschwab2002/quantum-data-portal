@@ -36,7 +36,7 @@ interface DashboardWidget {
     query: string
     visualization_type: string
     created_at: string
-  }
+  } | null
 }
 
 export default function CustomDashboard() {
@@ -106,20 +106,52 @@ export default function CustomDashboard() {
     if (!dashboardId) return
 
     try {
-      const { data, error } = await supabase
+      // First, fetch the widgets
+      const { data: widgetsData, error: widgetsError } = await supabase
         .from('dashboard_widgets')
-        .select(`
-          *,
-          question:questions(*)
-        `)
+        .select('*')
         .eq('dashboard_id', dashboardId)
         .order('created_at', { ascending: true })
 
-      if (error) {
-        throw error
+      if (widgetsError) {
+        throw widgetsError
       }
 
-      setWidgets(data || [])
+      if (!widgetsData || widgetsData.length === 0) {
+        setWidgets([])
+        return
+      }
+
+      // Get unique question IDs
+      const questionIds = [...new Set(widgetsData.map(widget => widget.question_id).filter(Boolean))]
+
+      if (questionIds.length === 0) {
+        // If no questions are associated, set widgets without question data
+        setWidgets(widgetsData.map(widget => ({ ...widget, question: null })))
+        return
+      }
+
+      // Fetch questions separately
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('questions')
+        .select('*')
+        .in('id', questionIds)
+
+      if (questionsError) {
+        console.warn('Error fetching questions:', questionsError)
+        // Still set widgets, but without question data
+        setWidgets(widgetsData.map(widget => ({ ...widget, question: null })))
+        return
+      }
+
+      // Combine widgets with their corresponding questions
+      const questionsMap = new Map(questionsData?.map(q => [q.id, q]) || [])
+      const widgetsWithQuestions = widgetsData.map(widget => ({
+        ...widget,
+        question: questionsMap.get(widget.question_id) || null
+      }))
+
+      setWidgets(widgetsWithQuestions)
     } catch (err) {
       console.error('Error fetching widgets:', err)
       toast({

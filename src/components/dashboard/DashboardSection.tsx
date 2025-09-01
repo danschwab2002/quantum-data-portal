@@ -27,7 +27,7 @@ interface DashboardWidget {
     query: string
     visualization_type: string
     created_at: string
-  }
+  } | null
 }
 
 interface DashboardSectionProps {
