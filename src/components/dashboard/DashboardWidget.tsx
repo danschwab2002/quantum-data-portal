@@ -239,8 +239,6 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
     const firstRow = data[0]
     const value = firstRow ? Object.values(firstRow)[0] : 0
     const numericValue = Number(value) || 0
-    const changePercentage = Math.random() * 20 - 5 // Mock percentage change
-    const isPositive = changePercentage >= 0
 
     return (
       <div className="text-center space-y-6 py-12">
@@ -249,11 +247,6 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         </div>
         <div className="text-8xl font-bold text-foreground">
           {typeof numericValue === 'number' ? numericValue.toLocaleString() : String(value)}
-        </div>
-        <div className="text-xl text-muted-foreground">Este mes</div>
-        <div className={`flex items-center justify-center gap-2 text-lg ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-          {isPositive ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
-          {Math.abs(changePercentage).toFixed(1)}% vs mes anterior
         </div>
       </div>
     )
@@ -275,7 +268,6 @@ export function DashboardWidget({ question, widget, onUpdate }: DashboardWidgetP
         <div className="text-8xl font-bold text-foreground">
           {percentageValue.toFixed(1)}%
         </div>
-        <div className="text-xl text-muted-foreground">Este mes</div>
       </div>
     )
   }
