@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { CustomFrequencySelector } from './CustomFrequencySelector';
 
 const alertFormSchema = z.object({
@@ -64,14 +65,40 @@ export function EditAlertModal({ alert, open, onOpenChange, onAlertUpdated }: Ed
   const onSubmit = async (data: AlertFormData) => {
     setLoading(true);
     try {
-      console.log('Would update alert:', { ...data, id: alert.id });
+      const { error } = await supabase
+        .from('alerts' as any)
+        .update({
+          name: data.name,
+          description: data.description || null,
+          threshold_operator: data.threshold_operator,
+          threshold_value: data.threshold_value,
+          webhook_url: data.webhook_url,
+          check_frequency: data.check_frequency,
+          is_active: data.is_active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', alert.id);
+
+      if (error) {
+        if (error.message.includes('relation "public.alerts" does not exist')) {
+          toast({
+            title: "Database Setup Required",
+            description: `Migration needed to save changes. Your webhook URL: ${data.webhook_url}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
       toast({
         title: "Success",
-        description: "Alert updated successfully! (Demo mode)",
+        description: `Alert updated successfully! Webhook: ${data.webhook_url}`,
       });
       onAlertUpdated();
       onOpenChange(false);
     } catch (error) {
+      console.error('Error updating alert:', error);
       toast({
         title: "Error",
         description: "Failed to update alert",

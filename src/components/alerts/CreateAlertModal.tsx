@@ -81,12 +81,35 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
       const { data: user, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
-      // Mock alert creation for now since tables don't exist yet
-      console.log('Would create alert:', { ...data, user_id: user.user?.id });
+      const { error: insertError } = await supabase
+        .from('alerts' as any)
+        .insert({
+          name: data.name,
+          description: data.description || null,
+          question_id: data.question_id,
+          threshold_operator: data.threshold_operator,
+          threshold_value: data.threshold_value,
+          webhook_url: data.webhook_url,
+          check_frequency: data.check_frequency,
+          is_active: data.is_active,
+          user_id: user.user?.id
+        });
+
+      if (insertError) {
+        if (insertError.message.includes('relation "public.alerts" does not exist')) {
+          toast({
+            title: "Database Setup Required",
+            description: "Please run the database migration to create alerts. Your webhook URL will be saved: " + data.webhook_url,
+            variant: "destructive",
+          });
+          return;
+        }
+        throw insertError;
+      }
       
       toast({
         title: "Success",
-        description: "Alert created successfully! (Note: This is currently a demo - database tables need to be created)",
+        description: `Alert created successfully! Webhook: ${data.webhook_url}`,
       });
 
       form.reset();

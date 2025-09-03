@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, AlertTriangle, Clock, Webhook } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { CreateAlertModal } from './CreateAlertModal';
 import { EditAlertModal } from './EditAlertModal';
 import { AlertCard } from './AlertCard';
@@ -45,31 +46,41 @@ export function AlertsSection() {
 
   const fetchAlerts = async () => {
     try {
-      // Mock data for now since alerts table doesn't exist yet
-      const mockAlerts: Alert[] = [
-        {
-          id: '1',
-          name: 'Low Daily Conversations',
-          description: 'Alert when daily conversations drop below 10',
-          question_id: 'q1',
-          threshold_operator: 'less_than',
-          threshold_value: 10,
-          webhook_url: 'https://hooks.zapier.com/hooks/catch/example',
-          is_active: true,
-          check_frequency: 'daily',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          questions: {
-            query: 'SELECT COUNT(*) FROM conversations WHERE DATE(created_at) = CURRENT_DATE',
-            name: 'Daily Conversations Count'
-          }
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      // Try to fetch from alerts table, fallback to mock data if table doesn't exist yet
+      const { data, error } = await supabase
+        .from('alerts' as any)
+        .select(`
+          *,
+          questions (
+            query,
+            name
+          )
+        `)
+        .eq('user_id', user.user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        // If table doesn't exist, show message and use empty array
+        if (error.message.includes('relation "public.alerts" does not exist')) {
+          toast({
+            title: "Database Setup Required",
+            description: "Please run the database migration to create the alerts table.",
+            variant: "destructive",
+          });
+          setAlerts([]);
+          return;
         }
-      ];
-      setAlerts(mockAlerts);
+        throw error;
+      }
+      
+      setAlerts((data as any[]) || []);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Failed to fetch alerts",
         variant: "destructive",
       });
@@ -78,18 +89,29 @@ export function AlertsSection() {
 
   const fetchAlertLogs = async () => {
     try {
-      // Mock data for now since alert_logs table doesn't exist yet
-      const mockLogs: AlertLog[] = [
-        {
-          id: '1',
-          alert_id: '1',
-          triggered_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          threshold_value: 10,
-          actual_value: 7,
-          webhook_response_status: 200
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data, error } = await supabase
+        .from('alert_logs' as any)
+        .select(`
+          *,
+          alerts!inner (
+            user_id
+          )
+        `)
+        .eq('alerts.user_id', user.user?.id)
+        .order('triggered_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        if (error.message.includes('relation "public.alert_logs" does not exist')) {
+          setAlertLogs([]);
+          return;
         }
-      ];
-      setAlertLogs(mockLogs);
+        throw error;
+      }
+      setAlertLogs((data as any[]) || []);
     } catch (error) {
       console.error('Error fetching alert logs:', error);
     }
@@ -97,7 +119,26 @@ export function AlertsSection() {
 
   const toggleAlert = async (alertId: string, isActive: boolean) => {
     try {
-      // Mock toggle for now
+      const { error } = await supabase
+        .from('alerts' as any)
+        .update({ 
+          is_active: !isActive,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', alertId);
+
+      if (error) {
+        if (error.message.includes('relation "public.alerts" does not exist')) {
+          toast({
+            title: "Database Setup Required",
+            description: "Please run the database migration to enable alert updates.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
       setAlerts(prev => prev.map(alert => 
         alert.id === alertId 
           ? { ...alert, is_active: !isActive, updated_at: new Date().toISOString() }
@@ -106,7 +147,7 @@ export function AlertsSection() {
       
       toast({
         title: "Success",
-        description: `Alert ${!isActive ? 'activated' : 'deactivated'} (Demo mode)`,
+        description: `Alert ${!isActive ? 'activated' : 'deactivated'}`,
       });
     } catch (error) {
       console.error('Error toggling alert:', error);
@@ -120,12 +161,28 @@ export function AlertsSection() {
 
   const deleteAlert = async (alertId: string) => {
     try {
-      // Mock delete for now
+      const { error } = await supabase
+        .from('alerts' as any)
+        .delete()
+        .eq('id', alertId);
+
+      if (error) {
+        if (error.message.includes('relation "public.alerts" does not exist')) {
+          toast({
+            title: "Database Setup Required",
+            description: "Please run the database migration to enable alert deletion.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
       setAlerts(prev => prev.filter(alert => alert.id !== alertId));
       
       toast({
         title: "Success",
-        description: "Alert deleted successfully (Demo mode)",
+        description: "Alert deleted successfully",
       });
     } catch (error) {
       console.error('Error deleting alert:', error);
