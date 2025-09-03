@@ -96,7 +96,7 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
         });
 
       if (insertError) {
-        if (insertError.message.includes('relation "public.alerts" does not exist')) {
+        if (insertError.message && insertError.message.includes('relation "public.alerts" does not exist')) {
           toast({
             title: "Database Setup Required",
             description: "Please run the database migration to create alerts. Your webhook URL will be saved: " + data.webhook_url,
@@ -104,6 +104,7 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
           });
           return;
         }
+        console.error('Insert error:', insertError);
         throw insertError;
       }
       

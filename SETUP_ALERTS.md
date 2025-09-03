@@ -1,8 +1,11 @@
-# 🚨 Setup Smart Alerts Database
+# 🚨 Setup Smart Alerts Database - UPDATED
 
-Your Smart Alerts system is now **code-complete** but needs the database tables to be created.
+Your Smart Alerts system is now **code-complete** but needs the updated database tables to be created.
 
-## Step 1: Run Database Migration
+## ⚠️ IMPORTANT: Updated Migration Required
+The migration has been updated to fix custom frequency support and foreign key issues.
+
+## Step 1: Run Updated Database Migration
 
 Execute the `create_alerts_tables.sql` file in your Supabase database:
 

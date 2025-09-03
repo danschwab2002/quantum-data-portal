@@ -63,8 +63,10 @@ export function AlertsSection() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        // If table doesn't exist, show message and use empty array
-        if (error.message.includes('relation "public.alerts" does not exist')) {
+        console.error('Error fetching alerts:', error);
+        // If table doesn't exist or foreign key issue, show message and use empty array
+        if (error.message && (error.message.includes('relation "public.alerts" does not exist') || 
+                             error.message.includes('Could not find a relationship'))) {
           toast({
             title: "Database Setup Required",
             description: "Please run the database migration to create the alerts table.",
@@ -105,7 +107,9 @@ export function AlertsSection() {
         .limit(50);
 
       if (error) {
-        if (error.message.includes('relation "public.alert_logs" does not exist')) {
+        console.error('Error fetching alert logs:', error);
+        if (error.message && (error.message.includes('relation "public.alert_logs" does not exist') || 
+                             error.message.includes('Could not find a relationship'))) {
           setAlertLogs([]);
           return;
         }
