@@ -1,0 +1,297 @@
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+const alertFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  question_id: z.string().min(1, 'Query is required'),
+  threshold_operator: z.enum(['less_than', 'greater_than', 'equal_to']),
+  threshold_value: z.number().min(0, 'Threshold must be positive'),
+  webhook_url: z.string().url('Must be a valid URL'),
+  check_frequency: z.enum(['hourly', 'daily', 'weekly']),
+  is_active: z.boolean().default(true),
+});
+
+type AlertFormData = z.infer<typeof alertFormSchema>;
+
+interface Question {
+  id: string;
+  name: string;
+  query: string;
+}
+
+interface CreateAlertModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAlertCreated: () => void;
+}
+
+export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateAlertModalProps) {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const form = useForm<AlertFormData>({
+    resolver: zodResolver(alertFormSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      question_id: '',
+      threshold_operator: 'less_than',
+      threshold_value: 0,
+      webhook_url: '',
+      check_frequency: 'daily',
+      is_active: true,
+    },
+  });
+
+  const fetchQuestions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('id, name, query')
+        .order('name');
+
+      if (error) throw error;
+      setQuestions(data || []);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch saved queries",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onSubmit = async (data: AlertFormData) => {
+    setLoading(true);
+    try {
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      // Mock alert creation for now since tables don't exist yet
+      console.log('Would create alert:', { ...data, user_id: user.user?.id });
+      
+      toast({
+        title: "Success",
+        description: "Alert created successfully! (Note: This is currently a demo - database tables need to be created)",
+      });
+
+      form.reset();
+      onAlertCreated();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating alert:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create alert",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchQuestions();
+    }
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Create Smart Alert</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alert Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Low Daily Conversations" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="question_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Query to Monitor</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a saved query" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {questions.map((question) => (
+                          <SelectItem key={question.id} value={question.id}>
+                            {question.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe what this alert monitors and when it should trigger"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="threshold_operator"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Condition</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="less_than">Less than</SelectItem>
+                        <SelectItem value="greater_than">Greater than</SelectItem>
+                        <SelectItem value="equal_to">Equal to</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="threshold_value"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Threshold Value</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="10"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="check_frequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Check Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="hourly">Every Hour</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="webhook_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Webhook URL</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://your-app.com/webhook/alerts"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="is_active"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Active</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Enable this alert to start monitoring
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Creating...' : 'Create Alert'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
