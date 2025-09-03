@@ -9,10 +9,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/components/auth/AuthProvider"
 import { useToast } from "@/hooks/use-toast"
-import { User, Settings as SettingsIcon, Database, Palette, Plus, Edit, Trash2, Upload, Users } from "lucide-react"
+import { User, Settings as SettingsIcon, Database, Palette, Plus, Edit, Trash2, Upload, Users, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AlertsSection } from "@/components/alerts/AlertsSection"
 
-type SettingsSection = 'profile' | 'workspace' | 'database' | 'appearance'
+type SettingsSection = 'profile' | 'workspace' | 'database' | 'appearance' | 'alerts'
 
 // Mock data - in a real app this would come from your backend
 const mockWorkspaceMembers = [
@@ -37,7 +38,7 @@ export default function Settings() {
 
   // Update active section when URL changes
   useEffect(() => {
-    if (section && ['profile', 'workspace', 'database', 'appearance'].includes(section)) {
+    if (section && ['profile', 'workspace', 'database', 'appearance', 'alerts'].includes(section)) {
       setActiveSection(section as SettingsSection)
     }
   }, [section])
@@ -57,6 +58,7 @@ export default function Settings() {
     { id: 'profile' as SettingsSection, label: 'User Profile', icon: User, adminOnly: false },
     { id: 'workspace' as SettingsSection, label: 'Workspace', icon: Users, adminOnly: true },
     { id: 'database' as SettingsSection, label: 'Database', icon: Database, adminOnly: false },
+    { id: 'alerts' as SettingsSection, label: 'Smart Alerts', icon: AlertTriangle, adminOnly: false },
     { id: 'appearance' as SettingsSection, label: 'Appearance', icon: Palette, adminOnly: true },
   ]
 
@@ -390,6 +392,8 @@ export default function Settings() {
         return renderWorkspaceSection()
       case 'database':
         return renderDatabaseSection()
+      case 'alerts':
+        return <AlertsSection />
       case 'appearance':
         return renderAppearanceSection()
       default:

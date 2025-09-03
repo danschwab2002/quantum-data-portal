@@ -8,10 +8,13 @@ interface Alert {
   id: string;
   name: string;
   description: string | null;
+  question_id: string;
   threshold_operator: 'less_than' | 'greater_than' | 'equal_to';
   threshold_value: number;
+  webhook_url: string;
   is_active: boolean;
   check_frequency: 'hourly' | 'daily' | 'weekly';
+  created_at: string;
   updated_at: string;
 }
 
