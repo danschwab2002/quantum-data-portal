@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
+import { CustomFrequencySelector } from './CustomFrequencySelector';
 
 const alertFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -18,7 +19,7 @@ const alertFormSchema = z.object({
   threshold_operator: z.enum(['less_than', 'greater_than', 'equal_to']),
   threshold_value: z.number().min(0, 'Threshold must be positive'),
   webhook_url: z.string().url('Must be a valid URL'),
-  check_frequency: z.enum(['hourly', 'daily', 'weekly']),
+  check_frequency: z.string().min(1, 'Frequency is required'),
   is_active: z.boolean().default(true),
 });
 
@@ -33,7 +34,7 @@ interface Alert {
   threshold_value: number;
   webhook_url: string;
   is_active: boolean;
-  check_frequency: 'hourly' | 'daily' | 'weekly';
+  check_frequency: string;
 }
 
 interface EditAlertModalProps {
@@ -88,20 +89,184 @@ export function EditAlertModal({ alert, open, onOpenChange, onAlertUpdated }: Ed
           <DialogTitle>Edit Smart Alert</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alert Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Low Daily Conversations" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="question_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Query to Monitor</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Query ID (readonly)"
+                        {...field}
+                        readOnly
+                        disabled
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="name"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Alert Name</FormLabel>
+                  <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Textarea 
+                      placeholder="Describe what this alert monitors and when it should trigger"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="threshold_operator"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Condition</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="less_than">Less than</SelectItem>
+                        <SelectItem value="greater_than">Greater than</SelectItem>
+                        <SelectItem value="equal_to">Equal to</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="threshold_value"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Threshold Value</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="10"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="check_frequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Check Frequency</FormLabel>
+                     {field.value && field.value.startsWith('custom:') ? (
+                      <FormControl>
+                        <CustomFrequencySelector
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                    ) : (
+                      <Select 
+                        onValueChange={(value) => {
+                          if (value === 'custom') {
+                            // This will trigger the CustomFrequencySelector to open
+                            field.onChange('custom:{"days":0,"hours":1,"minutes":0,"seconds":0}');
+                          } else {
+                            field.onChange(value);
+                          }
+                        }} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="hourly">Every Hour</SelectItem>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="webhook_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Webhook URL</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://your-app.com/webhook/alerts"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="is_active"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Active</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Enable this alert to start monitoring
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

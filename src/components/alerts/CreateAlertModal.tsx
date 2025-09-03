@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { CustomFrequencySelector } from './CustomFrequencySelector';
 
 const alertFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -19,7 +20,7 @@ const alertFormSchema = z.object({
   threshold_operator: z.enum(['less_than', 'greater_than', 'equal_to']),
   threshold_value: z.number().min(0, 'Threshold must be positive'),
   webhook_url: z.string().url('Must be a valid URL'),
-  check_frequency: z.enum(['hourly', 'daily', 'weekly']),
+  check_frequency: z.string().min(1, 'Frequency is required'),
   is_active: z.boolean().default(true),
 });
 
@@ -225,18 +226,40 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Check Frequency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    {field.value && field.value.startsWith('custom:') ? (
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
+                        <CustomFrequencySelector
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="hourly">Every Hour</SelectItem>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    ) : (
+                      <div className="space-y-2">
+                        <Select 
+                          onValueChange={(value) => {
+                            if (value === 'custom') {
+                              // This will trigger the CustomFrequencySelector to open
+                              field.onChange('custom:{"days":0,"hours":1,"minutes":0,"seconds":0}');
+                            } else {
+                              field.onChange(value);
+                            }
+                          }} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="hourly">Every Hour</SelectItem>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="custom">Custom</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
