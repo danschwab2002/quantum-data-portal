@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Database, Calendar, FileText, Pencil, Trash2, Check, X } from "lucide-react";
+import { Database, Calendar, FileText, Pencil, Trash2, Check, X, Info } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Question {
   id: string;
@@ -16,11 +17,19 @@ interface Question {
   created_at: string;
 }
 
+interface QuestionDetails {
+  question: Question;
+  collections: string[];
+  dashboards: { name: string; id: string }[];
+}
+
 const SavedQueries = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [selectedQuestion, setSelectedQuestion] = useState<QuestionDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,6 +64,52 @@ const SavedQueries = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchQuestionDetails = async (question: Question) => {
+    setLoadingDetails(true);
+    try {
+      // Fetch collections that contain this question
+      const { data: collectionsData, error: collectionsError } = await supabase
+        .from('collection_questions')
+        .select('collections(name)')
+        .eq('question_id', question.id);
+
+      if (collectionsError) {
+        console.error('Error fetching collections:', collectionsError);
+      }
+
+      // Fetch dashboards that contain this question
+      const { data: dashboardsData, error: dashboardsError } = await supabase
+        .from('dashboard_widgets')
+        .select('dashboards(name, id)')
+        .eq('question_id', question.id);
+
+      if (dashboardsError) {
+        console.error('Error fetching dashboards:', dashboardsError);
+      }
+
+      const collections = collectionsData?.map((item: any) => item.collections?.name).filter(Boolean) || [];
+      const dashboards = dashboardsData?.map((item: any) => ({
+        name: item.dashboards?.name || '',
+        id: item.dashboards?.id || ''
+      })).filter(item => item.name) || [];
+
+      setSelectedQuestion({
+        question,
+        collections,
+        dashboards
+      });
+    } catch (error) {
+      console.error('Error fetching question details:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los detalles de la consulta",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -215,6 +270,89 @@ const SavedQueries = () => {
                   </div>
                   {editingId !== question.id && (
                     <div className="flex items-center gap-1">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fetchQuestionDetails(question);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Info className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Detalles de la Consulta</DialogTitle>
+                            <DialogDescription>
+                              Información completa sobre "{question.name}"
+                            </DialogDescription>
+                          </DialogHeader>
+                          {loadingDetails ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="text-muted-foreground">Cargando detalles...</div>
+                            </div>
+                          ) : selectedQuestion && (
+                            <div className="space-y-6">
+                              <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Nombre</h4>
+                                <p className="text-lg font-semibold">{selectedQuestion.question.name}</p>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Fecha de Creación</h4>
+                                <p>{formatDate(selectedQuestion.question.created_at)}</p>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Tipo de Visualización</h4>
+                                <Badge variant="secondary">{selectedQuestion.question.visualization_type}</Badge>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Consulta SQL Completa</h4>
+                                <div className="bg-muted rounded-md p-4 max-h-60 overflow-y-auto">
+                                  <pre className="text-sm font-mono whitespace-pre-wrap">
+                                    {selectedQuestion.question.query}
+                                  </pre>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Colecciones</h4>
+                                {selectedQuestion.collections.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedQuestion.collections.map((collection, index) => (
+                                      <Badge key={index} variant="outline">{collection}</Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-muted-foreground">No pertenece a ninguna colección</p>
+                                )}
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Dashboards</h4>
+                                {selectedQuestion.dashboards.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {selectedQuestion.dashboards.map((dashboard, index) => (
+                                      <div key={index} className="flex items-center gap-2">
+                                        <Badge variant="outline">{dashboard.name}</Badge>
+                                        <span className="text-xs text-muted-foreground">({dashboard.id})</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-muted-foreground">No se muestra en ningún dashboard</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         size="sm"
                         variant="ghost"
