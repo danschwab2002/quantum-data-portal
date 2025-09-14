@@ -30,7 +30,7 @@ psql -h your-db-host -U postgres -d postgres -f create_alerts_tables.sql
 Once the migration runs successfully:
 1. Refresh your application
 2. Navigate to Smart Alerts section
-3. Create a new alert with your webhook: `https://appwebhook.plexonai.com/webhook/349c69ab-8301-48e3-b378-2c98441949a3`
+3. Create a new alert with your webhook: `https://appwebhook.plexonai.com/webhook/smart_alert`
 4. The webhook URL will now be **permanently saved** and **functional**!
 
 ## What happens after migration:
