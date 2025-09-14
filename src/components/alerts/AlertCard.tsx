@@ -3,20 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { AlertTriangle, Edit, Trash2, Activity, CheckCircle, XCircle } from 'lucide-react';
-
-interface Alert {
-  id: string;
-  name: string;
-  description: string | null;
-  question_id: string;
-  threshold_operator: 'less_than' | 'greater_than' | 'equal_to';
-  threshold_value: number;
-  webhook_url: string;
-  is_active: boolean;
-  check_frequency: 'hourly' | 'daily' | 'weekly';
-  created_at: string;
-  updated_at: string;
-}
+import { Alert } from './types';
 
 interface AlertCardProps {
   alert: Alert;

@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { CustomFrequencySelector } from './CustomFrequencySelector';
+import { Question } from './types';
 
 const alertFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -25,12 +26,6 @@ const alertFormSchema = z.object({
 });
 
 type AlertFormData = z.infer<typeof alertFormSchema>;
-
-interface Question {
-  id: string;
-  name: string;
-  query: string;
-}
 
 interface CreateAlertModalProps {
   open: boolean;
