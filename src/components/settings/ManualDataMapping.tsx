@@ -5,8 +5,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, PlusCircle, BarChart3, Calendar } from "lucide-react"
+import { Plus, PlusCircle, BarChart3, Calendar, CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 
 interface ManualEvent {
@@ -31,6 +35,10 @@ export function ManualDataMapping() {
   const [newEventDisplayName, setNewEventDisplayName] = useState("")
   const [newEventType, setNewEventType] = useState("")
   const [loading, setLoading] = useState(true)
+  const [isIncrementModalOpen, setIsIncrementModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<string>("")
+  const [incrementAmount, setIncrementAmount] = useState(1)
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const { toast } = useToast()
 
   useEffect(() => {
@@ -174,7 +182,7 @@ export function ManualDataMapping() {
     setNewEventType(formatEventType(value))
   }
 
-  const incrementEvent = async (eventName: string, amount: number = 1) => {
+  const incrementEvent = async (eventName: string, amount: number = 1, eventDate: Date = new Date()) => {
     try {
       const insertPromises = Array.from({ length: amount }, () => {
         const uniqueId = crypto.randomUUID()
@@ -184,7 +192,7 @@ export function ManualDataMapping() {
           id: uniqueId,
           event_type: eventName,
           account: 'MANUAL',
-          created_at: new Date().toISOString()
+          created_at: eventDate.toISOString()
         })
       })
 
@@ -204,6 +212,18 @@ export function ManualDataMapping() {
         variant: "destructive",
       })
     }
+  }
+
+  const openIncrementModal = (eventType: string, amount: number) => {
+    setSelectedEvent(eventType)
+    setIncrementAmount(amount)
+    setSelectedDate(new Date()) // Reset to current date
+    setIsIncrementModalOpen(true)
+  }
+
+  const handleIncrementSubmit = async () => {
+    await incrementEvent(selectedEvent, incrementAmount, selectedDate)
+    setIsIncrementModalOpen(false)
   }
 
   if (loading) {
@@ -319,7 +339,7 @@ export function ManualDataMapping() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => incrementEvent(event.event_type, 1)}
+                    onClick={() => openIncrementModal(event.event_type, 1)}
                     className="flex-1"
                   >
                     <PlusCircle className="w-3 h-3 mr-1" />
@@ -328,7 +348,7 @@ export function ManualDataMapping() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => incrementEvent(event.event_type, 5)}
+                    onClick={() => openIncrementModal(event.event_type, 5)}
                     className="flex-1"
                   >
                     <PlusCircle className="w-3 h-3 mr-1" />
@@ -337,7 +357,7 @@ export function ManualDataMapping() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => incrementEvent(event.event_type, 10)}
+                    onClick={() => openIncrementModal(event.event_type, 10)}
                     className="flex-1"
                   >
                     <PlusCircle className="w-3 h-3 mr-1" />
@@ -349,6 +369,58 @@ export function ManualDataMapping() {
           ))}
         </div>
       )}
+
+      {/* Increment Modal */}
+      <Dialog open={isIncrementModalOpen} onOpenChange={setIsIncrementModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Event Record</DialogTitle>
+            <DialogDescription>
+              Add {incrementAmount} record(s) for the selected event with a specific date.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="event-date">Event Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground">
+                Select the date when this event occurred. Defaults to today.
+              </p>
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsIncrementModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleIncrementSubmit}>
+                Add {incrementAmount} Record{incrementAmount > 1 ? 's' : ''}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
