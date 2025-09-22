@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS alerts (
   name TEXT NOT NULL,
   description TEXT,
   question_id UUID,
+  query TEXT NOT NULL,
   threshold_operator TEXT NOT NULL CHECK (threshold_operator IN ('less_than', 'greater_than', 'equal_to')),
   threshold_value NUMERIC NOT NULL,
   webhook_url TEXT NOT NULL,

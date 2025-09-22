@@ -4,6 +4,7 @@ export interface Alert {
   name: string;
   description: string | null;
   question_id: string | null;
+  query: string;
   threshold_operator: 'less_than' | 'greater_than' | 'equal_to';
   threshold_value: number;
   webhook_url: string;
@@ -12,10 +13,6 @@ export interface Alert {
   user_id: string;
   created_at: string;
   updated_at: string;
-  questions?: {
-    query: string;
-    name: string;
-  };
 }
 
 export interface AlertLog {

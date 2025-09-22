@@ -21,14 +21,7 @@ serve(async (req) => {
     // Fetch all active alerts
     const { data: alerts, error: alertsError } = await supabaseClient
       .from('alerts')
-      .select(`
-        *,
-        questions (
-          id,
-          name,
-          query
-        )
-      `)
+      .select('*')
       .eq('is_active', true)
 
     if (alertsError) {
@@ -42,7 +35,7 @@ serve(async (req) => {
         // Execute the query associated with the alert
         const { data: queryResult, error: queryError } = await supabaseClient
           .rpc('execute_sql_query', {
-            query_text: alert.questions.query
+            query_text: alert.query
           })
 
         if (queryError) {
@@ -71,7 +64,7 @@ serve(async (req) => {
             actual_value: actualValue,
             query_result: queryResult,
             triggered_at: new Date().toISOString(),
-            query_name: alert.questions.name
+            query_name: alert.name
           }
 
           const webhookResponse = await fetch(alert.webhook_url, {
