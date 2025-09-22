@@ -26,13 +26,7 @@ export function AlertsSection() {
       // Try to fetch from alerts table, fallback to mock data if table doesn't exist yet
       const { data, error } = await supabase
         .from('alerts' as any)
-        .select(`
-          *,
-          questions (
-            query,
-            name
-          )
-        `)
+        .select('*')
         .eq('user_id', user.user?.id)
         .order('created_at', { ascending: false });
 

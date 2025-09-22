@@ -3,20 +3,29 @@
 ## ✅ Code Changes Complete
 The smart alerts system has been updated to work with direct SQL queries without requiring a separate questions table.
 
-## 🗄️ Step 1: Update Database Schema
+## 🗄️ Step 1: Fix Your Existing Alert
 
-Run this in your Supabase SQL Editor:
+Run this in your Supabase SQL Editor to update your "Conversaciones bajas" alert:
 
 ```sql
--- Add query column to existing alerts table (if it exists)
+-- Add the query column if it doesn't exist
 ALTER TABLE alerts ADD COLUMN IF NOT EXISTS query TEXT;
 
--- Update the column to be NOT NULL after adding it
+-- Update your existing alert with the actual SQL query
+UPDATE alerts 
+SET query = 'SELECT COUNT(*) FROM setting_analytics WHERE event_type = ''connection_message_sent'''
+WHERE name = 'Conversaciones bajas' 
+AND query IS NULL;
+
+-- Make sure the query column is not null for all alerts
 UPDATE alerts SET query = 'SELECT 1' WHERE query IS NULL;
 ALTER TABLE alerts ALTER COLUMN query SET NOT NULL;
-```
 
-Or completely recreate with the updated `create_alerts_tables.sql` file.
+-- Verify the update worked
+SELECT id, name, query, threshold_operator, threshold_value, webhook_url, is_active
+FROM alerts 
+WHERE name = 'Conversaciones bajas';
+```
 
 ## 🚀 Step 2: Deploy Edge Function
 

@@ -16,7 +16,7 @@ import { CustomFrequencySelector } from './CustomFrequencySelector';
 const alertFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  question_id: z.string().min(1, 'Query is required'),
+  query: z.string().min(1, 'SQL query is required'),
   threshold_operator: z.enum(['less_than', 'greater_than', 'equal_to']),
   threshold_value: z.number().min(0, 'Threshold must be positive'),
   webhook_url: z.string().url('Must be a valid URL'),
@@ -30,7 +30,7 @@ interface Alert {
   id: string;
   name: string;
   description: string | null;
-  question_id: string;
+  query: string;
   threshold_operator: 'less_than' | 'greater_than' | 'equal_to';
   threshold_value: number;
   webhook_url: string;
@@ -53,7 +53,7 @@ export function EditAlertModal({ alert, open, onOpenChange, onAlertUpdated }: Ed
     defaultValues: {
       name: alert.name,
       description: alert.description || '',
-      question_id: alert.question_id,
+      query: alert.query,
       threshold_operator: alert.threshold_operator,
       threshold_value: alert.threshold_value,
       webhook_url: alert.webhook_url,
@@ -70,6 +70,7 @@ export function EditAlertModal({ alert, open, onOpenChange, onAlertUpdated }: Ed
         .update({
           name: data.name,
           description: data.description || null,
+          query: data.query,
           threshold_operator: data.threshold_operator,
           threshold_value: data.threshold_value,
           webhook_url: data.webhook_url,
@@ -134,16 +135,15 @@ export function EditAlertModal({ alert, open, onOpenChange, onAlertUpdated }: Ed
 
               <FormField
                 control={form.control}
-                name="question_id"
+                name="query"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Query to Monitor</FormLabel>
+                    <FormLabel>SQL Query to Monitor</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Query ID (readonly)"
+                      <Textarea
+                        placeholder="SELECT COUNT(*) FROM your_table WHERE condition"
+                        rows={3}
                         {...field}
-                        readOnly
-                        disabled
                       />
                     </FormControl>
                     <FormMessage />

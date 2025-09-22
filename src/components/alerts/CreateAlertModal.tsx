@@ -17,7 +17,7 @@ import { Question } from './types';
 const alertFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  question_id: z.string().min(1, 'Query is required'),
+  query: z.string().min(1, 'SQL query is required'),
   threshold_operator: z.enum(['less_than', 'greater_than', 'equal_to']),
   threshold_value: z.number().min(0, 'Threshold must be positive'),
   webhook_url: z.string().url('Must be a valid URL'),
@@ -34,7 +34,6 @@ interface CreateAlertModalProps {
 }
 
 export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateAlertModalProps) {
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
 
   const form = useForm<AlertFormData>({
@@ -42,7 +41,7 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
     defaultValues: {
       name: '',
       description: '',
-      question_id: '',
+      query: '',
       threshold_operator: 'less_than',
       threshold_value: 0,
       webhook_url: '',
@@ -51,24 +50,6 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
     },
   });
 
-  const fetchQuestions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('id, name, query')
-        .order('name');
-
-      if (error) throw error;
-      setQuestions(data || []);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch saved queries",
-        variant: "destructive",
-      });
-    }
-  };
 
   const onSubmit = async (data: AlertFormData) => {
     setLoading(true);
@@ -81,7 +62,7 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
         .insert({
           name: data.name,
           description: data.description || null,
-          question_id: data.question_id,
+          query: data.query,
           threshold_operator: data.threshold_operator,
           threshold_value: data.threshold_value,
           webhook_url: data.webhook_url,
@@ -123,11 +104,6 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
     }
   };
 
-  useEffect(() => {
-    if (open) {
-      fetchQuestions();
-    }
-  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,24 +131,17 @@ export function CreateAlertModal({ open, onOpenChange, onAlertCreated }: CreateA
 
               <FormField
                 control={form.control}
-                name="question_id"
+                name="query"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Query to Monitor</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a saved query" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {questions.map((question) => (
-                          <SelectItem key={question.id} value={question.id}>
-                            {question.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>SQL Query to Monitor</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="SELECT COUNT(*) FROM your_table WHERE condition"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
