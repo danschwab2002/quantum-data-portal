@@ -11,14 +11,25 @@ import { supabase } from "@/integrations/supabase/client"
 
 interface ManualEvent {
   event_type: string
+  display_name: string
   count: number
   lastUpdated: Date
+}
+
+// Utility function to convert display name to technical event type
+const formatEventType = (displayName: string): string => {
+  return displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+    .trim()
+    .replace(/\s+/g, '_') // Replace spaces with underscores
 }
 
 export function ManualDataMapping() {
   const [manualEvents, setManualEvents] = useState<ManualEvent[]>([])
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [newEventTitle, setNewEventTitle] = useState("")
+  const [newEventDisplayName, setNewEventDisplayName] = useState("")
+  const [newEventType, setNewEventType] = useState("")
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
@@ -36,11 +47,18 @@ export function ManualDataMapping() {
 
       if (error) throw error
 
+      // Get display name mappings from localStorage
+      const displayMappings = JSON.parse(localStorage.getItem('manual_event_display_names') || '{}')
+
       // Group by event_type and count occurrences
-      const eventCounts = data.reduce((acc: Record<string, { count: number, lastUpdated: Date }>, item) => {
+      const eventCounts = data.reduce((acc: Record<string, { count: number, lastUpdated: Date, display_name: string }>, item) => {
         if (item.event_type) {
           if (!acc[item.event_type]) {
-            acc[item.event_type] = { count: 0, lastUpdated: new Date(item.created_at!) }
+            acc[item.event_type] = { 
+              count: 0, 
+              lastUpdated: new Date(item.created_at!),
+              display_name: displayMappings[item.event_type] || item.event_type
+            }
           }
           acc[item.event_type].count++
           const itemDate = new Date(item.created_at!)
@@ -53,6 +71,7 @@ export function ManualDataMapping() {
 
       const events = Object.entries(eventCounts).map(([event_type, data]) => ({
         event_type,
+        display_name: data.display_name,
         count: data.count,
         lastUpdated: data.lastUpdated
       }))
@@ -71,10 +90,41 @@ export function ManualDataMapping() {
   }
 
   const createNewEvent = async () => {
-    if (!newEventTitle.trim()) {
+    if (!newEventDisplayName.trim()) {
       toast({
         title: "Error",
-        description: "Please enter an event title",
+        description: "Please enter a display name",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!newEventType.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an event type",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate event_type format
+    const validEventTypeRegex = /^[a-z0-9_]+$/
+    if (!validEventTypeRegex.test(newEventType)) {
+      toast({
+        title: "Error",
+        description: "Event type must only contain lowercase letters, numbers, and underscores",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Check if event_type already exists
+    const existingEvent = manualEvents.find(e => e.event_type === newEventType)
+    if (existingEvent) {
+      toast({
+        title: "Error",
+        description: "An event with this identifier already exists",
         variant: "destructive",
       })
       return
@@ -88,19 +138,25 @@ export function ManualDataMapping() {
         .from('setting_analytics')
         .insert({
           id: uniqueId,
-          event_type: newEventTitle.trim(),
+          event_type: newEventType.trim(),
           account: 'MANUAL',
           created_at: new Date().toISOString()
         })
 
       if (error) throw error
 
+      // Store display name mapping in localStorage
+      const displayMappings = JSON.parse(localStorage.getItem('manual_event_display_names') || '{}')
+      displayMappings[newEventType.trim()] = newEventDisplayName.trim()
+      localStorage.setItem('manual_event_display_names', JSON.stringify(displayMappings))
+
       toast({
         title: "Success",
         description: "Manual event created successfully",
       })
 
-      setNewEventTitle("")
+      setNewEventDisplayName("")
+      setNewEventType("")
       setIsCreateModalOpen(false)
       loadManualEvents()
     } catch (error) {
@@ -113,18 +169,23 @@ export function ManualDataMapping() {
     }
   }
 
+  const handleDisplayNameChange = (value: string) => {
+    setNewEventDisplayName(value)
+    setNewEventType(formatEventType(value))
+  }
+
   const incrementEvent = async (eventName: string, amount: number = 1) => {
     try {
       const insertPromises = Array.from({ length: amount }, () => {
         const uniqueId = crypto.randomUUID()
         return supabase
           .from('setting_analytics')
-          .insert({
-            id: uniqueId,
-            event_type: eventName,
-            account: 'MANUAL',
-            created_at: new Date().toISOString()
-          })
+        .insert({
+          id: uniqueId,
+          event_type: eventName,
+          account: 'MANUAL',
+          created_at: new Date().toISOString()
+        })
       })
 
       await Promise.all(insertPromises)
@@ -174,14 +235,31 @@ export function ManualDataMapping() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="event-title">Event Title</Label>
+                <Label htmlFor="display-name">Display Name</Label>
                 <Input
-                  id="event-title"
-                  value={newEventTitle}
-                  onChange={(e) => setNewEventTitle(e.target.value)}
-                  placeholder="e.g., Customer Support Calls, Manual Sales, etc."
+                  id="display-name"
+                  value={newEventDisplayName}
+                  onChange={(e) => handleDisplayNameChange(e.target.value)}
+                  placeholder="e.g., New Lead, Customer Support Call"
                 />
+                <p className="text-xs text-muted-foreground">
+                  This is the friendly name that will be displayed in the interface.
+                </p>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="event-type">Event Type (Technical Identifier)</Label>
+                <Input
+                  id="event-type"
+                  value={newEventType}
+                  onChange={(e) => setNewEventType(e.target.value)}
+                  placeholder="e.g., new_lead, customer_support_call"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Lowercase letters, numbers, and underscores only. This identifier will be used in the database.
+                </p>
+              </div>
+              
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                   Cancel
@@ -216,11 +294,14 @@ export function ManualDataMapping() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-lg">{event.event_type}</CardTitle>
+                    <CardTitle className="text-lg">{event.display_name}</CardTitle>
                     <CardDescription className="flex items-center gap-1 text-xs">
                       <Calendar className="w-3 h-3" />
                       Last: {event.lastUpdated.toLocaleDateString()}
                     </CardDescription>
+                    <Badge variant="outline" className="text-xs font-mono">
+                      {event.event_type}
+                    </Badge>
                   </div>
                   <Badge variant="secondary" className="font-mono">
                     {event.count}
