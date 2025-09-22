@@ -29,6 +29,8 @@ WHERE name = 'Conversaciones bajas';
 
 ## 🚀 Step 2: Deploy Edge Function
 
+**IMPORTANT**: You must run Step 1 first to add the `query` column before creating new alerts!
+
 ```bash
 # Deploy the updated check-alerts function
 supabase functions deploy check-alerts
