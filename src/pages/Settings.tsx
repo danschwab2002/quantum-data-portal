@@ -12,8 +12,9 @@ import { useToast } from "@/hooks/use-toast"
 import { User, Settings as SettingsIcon, Database, Palette, Plus, Edit, Trash2, Upload, Users, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AlertsSection } from "@/components/alerts/AlertsSection"
+import { ManualDataMapping } from "@/components/settings/ManualDataMapping"
 
-type SettingsSection = 'profile' | 'workspace' | 'database' | 'appearance' | 'alerts'
+type SettingsSection = 'profile' | 'workspace' | 'database' | 'appearance' | 'alerts' | 'manual-mapping'
 
 // Mock data - in a real app this would come from your backend
 const mockWorkspaceMembers = [
@@ -38,7 +39,7 @@ export default function Settings() {
 
   // Update active section when URL changes
   useEffect(() => {
-    if (section && ['profile', 'workspace', 'database', 'appearance', 'alerts'].includes(section)) {
+    if (section && ['profile', 'workspace', 'database', 'appearance', 'alerts', 'manual-mapping'].includes(section)) {
       setActiveSection(section as SettingsSection)
     }
   }, [section])
@@ -59,6 +60,7 @@ export default function Settings() {
     { id: 'workspace' as SettingsSection, label: 'Workspace', icon: Users, adminOnly: true },
     { id: 'database' as SettingsSection, label: 'Database', icon: Database, adminOnly: false },
     { id: 'alerts' as SettingsSection, label: 'Smart Alerts', icon: AlertTriangle, adminOnly: false },
+    { id: 'manual-mapping' as SettingsSection, label: 'Manual Data Mapping', icon: Edit, adminOnly: false },
     { id: 'appearance' as SettingsSection, label: 'Appearance', icon: Palette, adminOnly: true },
   ]
 
@@ -394,6 +396,8 @@ export default function Settings() {
         return renderDatabaseSection()
       case 'alerts':
         return <AlertsSection />
+      case 'manual-mapping':
+        return <ManualDataMapping />
       case 'appearance':
         return renderAppearanceSection()
       default:
