@@ -35,9 +35,5 @@ COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 # Expone puerto 80
 EXPOSE 80
 
-# Health check para asegurar que Nginx está sirviendo contenido
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
-
 # Inicia Nginx en primer plano
 CMD ["nginx", "-g", "daemon off;"]
