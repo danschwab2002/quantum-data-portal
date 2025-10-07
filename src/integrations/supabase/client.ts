@@ -24,8 +24,15 @@ const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY || 
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.QfbDcYC6GmxN5-tc9PqRr-fR8ADIZM74Rb2fmm22xZg";
 
+// Debug: Log configuration source and values
+console.log('🔧 Supabase Client Configuration:');
+console.log('  Source:', typeof window !== 'undefined' && window.ENV_CONFIG ? 'window.ENV_CONFIG (Docker)' : 'import.meta.env (Local)');
+console.log('  URL:', SUPABASE_URL);
+console.log('  Key (first 20 chars):', SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + '...');
+
 // Validate required environment variables
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('❌ Missing Supabase environment variables!');
   throw new Error(
     'Missing required Supabase environment variables. Please check your .env file or Docker environment variables.'
   );

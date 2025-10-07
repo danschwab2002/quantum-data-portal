@@ -13,10 +13,10 @@ services:
       # Configuración de Supabase Backend
       # ============================================
       # URL de tu instancia de Supabase (self-hosted o cloud)
-      VITE_SUPABASE_URL: "https://appsupabase.plexonai.com"
+      VITE_SUPABASE_URL: "https://appsupabase.plugarqdeveloper.site"
       
       # Anon Key de tu proyecto de Supabase
-      VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.QfbDcYC6GmxN5-tc9PqRr-fR8ADIZM74Rb2fmm22xZg"
+      VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltY3V1emlhcmd2bGRtZGFxa3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NTY5NjEsImV4cCI6MjA1MjUzMjk2MX0.o8d_F_5t9SkySqrXIE7n-YbiKxYOpRXvL8fNY5_RMqE"
     restart: unless-stopped
     networks:
       - analytics-network
