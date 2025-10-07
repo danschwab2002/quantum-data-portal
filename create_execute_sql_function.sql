@@ -9,22 +9,15 @@ AS $$
 DECLARE
     rec RECORD;
     result_array JSONB := '[]'::JSONB;
-    row_json JSONB;
 BEGIN
-    -- Execute the dynamic query and build JSON result
+    -- Execute the dynamic query and build JSON result array
     FOR rec IN EXECUTE query_text LOOP
-        -- Convert each row to JSON
-        row_json := to_jsonb(rec);
-        result_array := result_array || row_json;
+        -- Add each row as an object within the array
+        result_array := result_array || jsonb_build_array(to_jsonb(rec));
     END LOOP;
     
-    -- Return each row as a separate result
-    FOR rec IN SELECT jsonb_array_elements(result_array) as r LOOP
-        result := rec.r;
-        RETURN NEXT;
-    END LOOP;
-    
-    RETURN;
+    -- Return a SINGLE row with the "result" column containing the JSON array
+    RETURN QUERY SELECT result_array;
 END;
 $$;
 
