@@ -139,17 +139,12 @@ export function ManualDataMapping() {
     }
 
     try {
-      // Generate a unique ID for the new record
-      const uniqueId = crypto.randomUUID()
-      
-      const { error } = await supabase
-        .from('setting_analytics')
-        .insert({
-          id: uniqueId,
-          event_type: newEventType.trim(),
-          account: 'MANUAL',
-          created_at: new Date().toISOString()
-        })
+      // Usar RPC function para evitar problemas de cache de PostgREST
+      const { error } = await supabase.rpc('insert_manual_event' as any, {
+        p_event_type: newEventType.trim(),
+        p_account: 'MANUAL',
+        p_created_at: new Date().toISOString()
+      })
 
       if (error) throw error
 
@@ -184,17 +179,14 @@ export function ManualDataMapping() {
 
   const incrementEvent = async (eventName: string, amount: number = 1, eventDate: Date = new Date()) => {
     try {
-      const insertPromises = Array.from({ length: amount }, () => {
-        const uniqueId = crypto.randomUUID()
-        return supabase
-          .from('setting_analytics')
-        .insert({
-          id: uniqueId,
-          event_type: eventName,
-          account: 'MANUAL',
-          created_at: eventDate.toISOString()
+      // Usar RPC function para evitar problemas de cache de PostgREST
+      const insertPromises = Array.from({ length: amount }, () => 
+        supabase.rpc('insert_manual_event' as any, {
+          p_event_type: eventName,
+          p_account: 'MANUAL',
+          p_created_at: eventDate.toISOString()
         })
-      })
+      )
 
       await Promise.all(insertPromises)
 
