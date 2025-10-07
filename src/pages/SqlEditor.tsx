@@ -174,16 +174,15 @@ WHERE event_type = 'connection_message_sent';`)
     setIsSaving(true)
 
     try {
-      // Insertar la pregunta en la base de datos
-      const { data: questionData, error: questionError } = await supabase
-        .from('questions')
-        .insert({
-          name: questionName.trim(),
-          query: query.trim(),
-          visualization_type: visualizationType
-        })
-        .select()
-        .single()
+      // Usar RPC function para evitar problemas de cache de PostgREST
+      const result = await supabase.rpc('insert_question' as any, {
+        p_name: questionName.trim(),
+        p_query: query.trim(),
+        p_visualization_type: visualizationType
+      }).single()
+      
+      const questionData = result.data as { id: string } | null
+      const questionError = result.error
 
       if (questionError) {
         console.error('Error saving question:', questionError)
