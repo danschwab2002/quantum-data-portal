@@ -32,8 +32,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copia la configuración personalizada de Nginx para SPA routing y cache
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
+# Copia el script de configuración en runtime
+COPY env-config.sh /docker-entrypoint.d/env-config.sh
+RUN chmod +x /docker-entrypoint.d/env-config.sh
+
 # Expone puerto 80
 EXPOSE 80
 
-# Inicia Nginx en primer plano
-CMD ["nginx", "-g", "daemon off;"]
+# Usa el script como entrypoint para configurar en runtime
+ENTRYPOINT ["/docker-entrypoint.d/env-config.sh"]

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  analytics-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: analytics-pro
+    ports:
+      - "80:80"
+    environment:
+      # ============================================
+      # Configuración de Supabase Backend
+      # ============================================
+      # URL de tu instancia de Supabase (self-hosted o cloud)
+      VITE_SUPABASE_URL: "https://appsupabase.plexonai.com"
+      
+      # Anon Key de tu proyecto de Supabase
+      VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.QfbDcYC6GmxN5-tc9PqRr-fR8ADIZM74Rb2fmm22xZg"
+    restart: unless-stopped
+    networks:
+      - analytics-network
+
+networks:
+  analytics-network:
+    driver: bridge

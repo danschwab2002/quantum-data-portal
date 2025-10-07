@@ -2,13 +2,32 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://appsupabase.plexonai.com/";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.QfbDcYC6GmxN5-tc9PqRr-fR8ADIZM74Rb2fmm22xZg";
+// Declare global window type for ENV_CONFIG
+declare global {
+  interface Window {
+    ENV_CONFIG?: {
+      VITE_SUPABASE_URL: string;
+      VITE_SUPABASE_ANON_KEY: string;
+    };
+  }
+}
+
+// Leer configuración desde window.ENV_CONFIG (runtime en Docker)
+// o desde import.meta.env (desarrollo local con Vite)
+const SUPABASE_URL = 
+  (typeof window !== 'undefined' && window.ENV_CONFIG?.VITE_SUPABASE_URL) || 
+  import.meta.env.VITE_SUPABASE_URL || 
+  "https://appsupabase.plexonai.com/";
+
+const SUPABASE_PUBLISHABLE_KEY = 
+  (typeof window !== 'undefined' && window.ENV_CONFIG?.VITE_SUPABASE_ANON_KEY) || 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.QfbDcYC6GmxN5-tc9PqRr-fR8ADIZM74Rb2fmm22xZg";
 
 // Validate required environment variables
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error(
-    'Missing required Supabase environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
+    'Missing required Supabase environment variables. Please check your .env file or Docker environment variables.'
   );
 }
 
